@@ -6,8 +6,8 @@
   "default_reward_rate": 1.0,
   "reward_type": "Cashback",
   "point_value": 1.0,
-  "annual_fee": 0,
-  "annual_fee_waiver": "",
+  "annual_fee": 500,
+  "annual_fee_waiver": "Waived for first year; subsequently waived on spending ₹1,50,000 in a year",
   "reward_rules": [
     {
       "type": "Merchant",
@@ -16,12 +16,58 @@
       "reward_type": "Cashback"
     },
     {
+      "type": "Merchant",
+      "entity_name": "amazon_prime",
+      "reward_rate": 5.0,
+      "reward_type": "Cashback"
+    },
+    {
       "type": "Category",
       "entity_name": "utilities",
+      "reward_rate": 2.0,
+      "reward_type": "Cashback"
+    },
+    {
+      "type": "Category",
+      "entity_name": "bill_payments",
+      "reward_rate": 2.0,
+      "reward_type": "Cashback"
+    },
+    {
+      "type": "Category",
+      "entity_name": "mobile_recharges",
       "reward_rate": 2.0,
       "reward_type": "Cashback"
     }
   ],
   "benefits": [
-  ]
+    "Welcome benefit of ₹500 Amazon Pay Gift Card",
+    "5% unlimited cashback on Amazon.in shopping",
+    "2% cashback on utilities, mobile recharges, and other bill payments",
+    "1% cashback on all other spends",
+    "Fuel surcharge waiver of 1% (up to ₹250 per statement cycle)",
+    "No-cost EMI on Amazon.in",
+    "Amazon Prime membership for first year (for select customers)",
+    "24/7 concierge services",
+    "Contactless payment feature"
+  ],
+  "eligibility": {
+    "min_age": 21,
+    "max_age": 65,
+    "min_income": 180000,
+    "credit_score": 700
+  },
+  "fees": {
+    "joining_fee": 500,
+    "renewal_fee": 500,
+    "late_payment_fee": "₹100 to ₹750 (based on outstanding amount)",
+    "cash_advance_fee": "2.5% of amount withdrawn (min ₹500)",
+    "over_limit_fee": "2.5% of over-limit amount (min ₹500)",
+    "foreign_currency_markup": "3.5% of transaction amount"
+  },
+  "interest_rates": {
+    "purchase_apr": 42.0,
+    "cash_advance_apr": 42.0,
+    "minimum_due": "5% of total outstanding (min ₹100)"
+  }
 }
