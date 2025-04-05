@@ -40,7 +40,7 @@ var parsed parsedCards
 
 // Parse parses all predefined card definitions from the data/cards directory
 func Parse(data embed.FS) error {
-	entries, err := data.ReadDir("cards")
+	entries, err := data.ReadDir("data/cards")
 	if err != nil {
 		return fmt.Errorf("error reading cards dir: %w", err)
 	}
@@ -49,7 +49,7 @@ func Parse(data embed.FS) error {
 	cardMap := make(map[string]*Card)
 
 	for _, entry := range entries {
-		fn := fmt.Sprintf("cards/%s", entry.Name())
+		fn := fmt.Sprintf("data/cards/%s", entry.Name())
 
 		file, err := data.ReadFile(fn)
 		if err != nil {

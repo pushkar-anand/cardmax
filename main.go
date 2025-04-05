@@ -21,7 +21,7 @@ import (
 	projectconfig "github.com/pushkar-anand/cardmax/config"
 )
 
-//go:embed data/
+//go:embed data/*
 var data embed.FS
 
 func main() {

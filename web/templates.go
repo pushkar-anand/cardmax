@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-//go:embed templates/*.html.tmpl templates/partials/*.tmpl
+//go:embed templates/*.html
 var templatesFS embed.FS
 
 type (
@@ -27,7 +27,7 @@ const (
 )
 
 func GetTemplates() (*Renderer, error) {
-	templates, err := template.ParseFS(templatesFS, "templates/*.html.tmpl", "templates/partials/*.tmpl")
+	templates, err := template.ParseFS(templatesFS, "templates/*.html")
 	if err != nil {
 		return nil, fmt.Errorf("error parsing templates: %w", err)
 	}
@@ -38,6 +38,10 @@ func GetTemplates() (*Renderer, error) {
 }
 
 func (tr *Renderer) Render(w http.ResponseWriter, name Template, data map[string]any) error {
+	if data == nil {
+		data = make(map[string]any)
+	}
+
 	data["Year"] = time.Now().Year()
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
