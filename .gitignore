@@ -10,3 +10,5 @@ go.work.sum
 *.env
 .aider*
 .idea/
+cardmax
+tmp/
