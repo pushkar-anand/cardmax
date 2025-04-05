@@ -8,6 +8,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const otherCardsResults = document.getElementById('other-cards-results');
     const saveTransactionBtn = document.getElementById('save-transaction-btn');
     
+    console.log('DOM Elements initialized:', {
+        recommendForm,
+        recommendationResults,
+        bestCardResult,
+        otherCardsResults,
+        saveTransactionBtn
+    });
+    
     const transactionModal = document.getElementById('transaction-modal');
     const saveTransactionForm = document.getElementById('save-transaction-form');
     const closeTransactionModal = document.querySelector('.close-transaction-modal');
@@ -61,6 +69,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const userCards = Storage.getCards().map(card => card.id);
         
         // API request for recommendation
+        console.log('Sending request with:', {merchant, category, amount, userCards});
+        
         fetch('/api/recommend', {
             method: 'POST',
             headers: {
@@ -74,18 +84,21 @@ document.addEventListener('DOMContentLoaded', function() {
             }),
         })
         .then(response => {
+            console.log('Response status:', response.status);
             if (!response.ok) {
-                throw new Error('Error getting recommendations');
+                throw new Error(`Error getting recommendations: ${response.status}`);
             }
             return response.json();
         })
         .then(data => {
+            console.log('Received data:', data);
+            
             // Store for later use
             currentRecommendation = {
                 merchant,
                 category,
                 amount,
-                results: data.all_cards
+                results: data.all_cards || []
             };
             
             // Display the recommendation
@@ -96,83 +109,117 @@ document.addEventListener('DOMContentLoaded', function() {
             recommendationResults.innerHTML = `
                 <div class="error-message">
                     <p>Sorry, we couldn't get recommendations right now. Please try again.</p>
+                    <p>Error details: ${error.message}</p>
                 </div>
             `;
         });
     }
     
     function displayRecommendationFromAPI(data, amount) {
-        if (!data.best_card) {
-            bestCardResult.innerHTML = `
-                <p>No cards found. <a href="/cards">Add your first card</a> to get recommendations.</p>
+        try {
+            console.log('Display recommendation from API called with:', data);
+            
+            if (!data || !data.best_card) {
+                console.log('No best card found in data');
+                bestCardResult.innerHTML = `
+                    <p>No cards found. <a href="/cards">Add your first card</a> to get recommendations.</p>
+                `;
+                otherCardsResults.innerHTML = '';
+                saveTransactionBtn.disabled = true;
+                return;
+            }
+            
+            // Best card
+            const bestCard = data.best_card;
+            console.log('Best card:', bestCard);
+            bestCardResult.innerHTML = createCardResultHTMLFromAPI(bestCard, amount, true);
+            
+            // Other cards
+            let otherCardsHTML = '';
+            if (data.all_cards && data.all_cards.length > 1) {
+                otherCardsHTML = '<div class="other-cards-accordion">';
+                for (let i = 1; i < data.all_cards.length; i++) {
+                    otherCardsHTML += createCardResultHTMLFromAPI(data.all_cards[i], amount, false);
+                }
+                otherCardsHTML += '</div>';
+            } else {
+                otherCardsHTML = '<p>No other cards available.</p>';
+            }
+            otherCardsResults.innerHTML = otherCardsHTML;
+            
+            console.log('Updated UI with recommendation results');
+            
+            // Show results section
+            recommendationResults.classList.remove('hidden');
+            
+            // Enable save transaction button
+            saveTransactionBtn.disabled = false;
+            
+            // Add event listeners for accordion
+            document.querySelectorAll('.card-result-header').forEach(header => {
+                if (!header.closest('.best-card')) {
+                    header.addEventListener('click', function() {
+                        const card = this.closest('.card-result-item');
+                        card.classList.toggle('expanded');
+                    });
+                }
+            });
+        } catch (error) {
+            console.error('Error in displayRecommendationFromAPI:', error);
+            recommendationResults.innerHTML = `
+                <div class="error-message">
+                    <p>Error displaying recommendation results.</p>
+                    <p>Error details: ${error.message}</p>
+                </div>
             `;
-            otherCardsResults.innerHTML = '';
-            saveTransactionBtn.disabled = true;
-            return;
         }
-        
-        // Best card
-        const bestCard = data.best_card;
-        bestCardResult.innerHTML = createCardResultHTMLFromAPI(bestCard, amount, true);
-        
-        // Other cards
-        let otherCardsHTML = '';
-        if (data.all_cards && data.all_cards.length > 1) {
-            otherCardsHTML = '<div class="other-cards-accordion">';
-            for (let i = 1; i < data.all_cards.length; i++) {
-                otherCardsHTML += createCardResultHTMLFromAPI(data.all_cards[i], amount, false);
-            }
-            otherCardsHTML += '</div>';
-        } else {
-            otherCardsHTML = '<p>No other cards available.</p>';
-        }
-        otherCardsResults.innerHTML = otherCardsHTML;
-        
-        // Show results section
-        recommendationResults.classList.remove('hidden');
-        
-        // Enable save transaction button
-        saveTransactionBtn.disabled = false;
-        
-        // Add event listeners for accordion
-        document.querySelectorAll('.card-result-header').forEach(header => {
-            if (!header.closest('.best-card')) {
-                header.addEventListener('click', function() {
-                    const card = this.closest('.card-result-item');
-                    card.classList.toggle('expanded');
-                });
-            }
-        });
     }
     
     function createCardResultHTMLFromAPI(result, amount, isBest) {
-        const card = result.card;
-        let rewardDisplay = '';
-        
-        if (result.reward_type === 'Cashback') {
-            rewardDisplay = `${Utils.formatCurrency(result.cash_value)} cashback (${result.reward_rate}%)`;
-        } else {
-            rewardDisplay = `${result.reward_value.toFixed(0)} ${result.reward_type} (${result.reward_rate}%)`;
-            rewardDisplay += ` worth ${Utils.formatCurrency(result.cash_value)}`;
+        try {
+            console.log('Creating HTML for card result:', result);
+            
+            if (!result || !result.card) {
+                console.error('Invalid result object:', result);
+                return '<div class="error">Error: Invalid card data</div>';
+            }
+            
+            const card = result.card;
+            let rewardDisplay = '';
+            
+            try {
+                if (result.reward_type === 'Cashback') {
+                    rewardDisplay = `${Utils.formatCurrency(result.cash_value)} cashback (${result.reward_rate}%)`;
+                } else {
+                    rewardDisplay = `${result.reward_value.toFixed(0)} ${result.reward_type} (${result.reward_rate}%)`;
+                    rewardDisplay += ` worth ${Utils.formatCurrency(result.cash_value)}`;
+                }
+                
+                // Extract last4 digits from the card.Name if available, otherwise use card_key
+                const cardIdentifier = card.last4_digits ? `*${card.last4_digits}` : card.card_key;
+                
+                return `
+                    <div class="card-result-item ${isBest ? 'best-card-item' : ''}" data-key="${card.card_key}">
+                        <div class="card-result-header">
+                            <div class="card-result-name">${card.name} (${cardIdentifier})</div>
+                            <div class="card-result-reward">${rewardDisplay}</div>
+                            ${!isBest ? '<div class="expand-icon">▼</div>' : ''}
+                        </div>
+                        <div class="card-result-details ${!isBest ? 'collapsed' : ''}">
+                            <div>On ${Utils.formatCurrency(amount)} purchase</div>
+                            ${result.rule ? `<div>Special rate for ${result.rule.type}: ${result.rule.entity_name}</div>` : ''}
+                            <div class="card-issuer">Issued by: ${card.issuer}</div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error processing card result:', error, result);
+                return `<div class="error">Error processing card: ${error.message}</div>`;
+            }
+        } catch (error) {
+            console.error('Error in createCardResultHTMLFromAPI:', error);
+            return `<div class="error">Error: ${error.message}</div>`;
         }
-        
-        // Extract last4 digits from the card.Name if available, otherwise use card_key
-        const cardIdentifier = card.last4_digits ? `*${card.last4_digits}` : card.card_key;
-        
-        return `
-            <div class="card-result-item ${isBest ? 'best-card-item' : ''}" data-key="${card.card_key}">
-                <div class="card-result-header">
-                    <div class="card-result-name">${card.name} (${cardIdentifier})</div>
-                    <div class="card-result-reward">${rewardDisplay}</div>
-                    ${!isBest ? '<div class="expand-icon">▼</div>' : ''}
-                </div>
-                <div class="card-result-details ${!isBest ? 'collapsed' : ''}">
-                    <div>On ${Utils.formatCurrency(amount)} purchase</div>
-                    ${result.rule ? `<div>Special rate for ${result.rule.type}: ${result.rule.entity_name}</div>` : ''}
-                    <div class="card-issuer">Issued by: ${card.issuer}</div>
-                </div>
-            </div>
-        `;
     }
     
     function displayRecommendation(results, amount) {
