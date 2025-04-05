@@ -72,3 +72,14 @@ func Parse(data embed.FS) error {
 
 	return nil
 }
+
+// GetAll returns all predefined cards
+func GetAll() []*Card {
+	return parsed.cards
+}
+
+// GetByKey returns a card by its key
+func GetByKey(key string) (*Card, bool) {
+	card, ok := parsed.cardMap[key]
+	return card, ok
+}

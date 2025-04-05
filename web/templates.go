@@ -50,11 +50,15 @@ func (tr *Renderer) Render(w http.ResponseWriter, name Template, data map[string
 	return nil
 }
 
-func (tr *Renderer) Handler(name Template, data map[string]any) http.HandlerFunc {
+func (tr *Renderer) HTMLDataHandler(name Template, data map[string]any) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := tr.Render(w, name, data)
 		if err != nil {
 
 		}
 	}
+}
+
+func (tr *Renderer) HTMLHandler(name Template) http.HandlerFunc {
+	return tr.HTMLDataHandler(name, nil)
 }
