@@ -5,6 +5,7 @@ import (
 	"github.com/pushkar-anand/build-with-go/http/request"
 	"github.com/pushkar-anand/build-with-go/http/response"
 	"github.com/pushkar-anand/cardmax/api/cards"
+	"github.com/pushkar-anand/cardmax/api/recommend"
 	"github.com/pushkar-anand/cardmax/web"
 	"log/slog"
 	"net/http"
@@ -34,5 +35,10 @@ func addRoutes(
 		"/cards/{key}",
 		cards.GetByKeyHandler(logger, jsonWriter),
 	).Methods(http.MethodGet)
+	
+	apiRouter.HandleFunc(
+		"/recommend",
+		recommend.GetRecommendationHandler(logger, jsonWriter, reader),
+	).Methods(http.MethodPost)
 
 }

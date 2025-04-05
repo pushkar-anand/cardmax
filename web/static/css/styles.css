@@ -348,6 +348,66 @@ input:focus, select:focus, textarea:focus {
 .card-result-details {
     font-size: 0.9rem;
     color: var(--text-light);
+    transition: max-height 0.3s ease, opacity 0.2s ease;
+}
+
+.collapsed {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    margin-top: 0;
+}
+
+.card-result-item {
+    transition: all 0.3s ease;
+}
+
+.card-result-item.expanded .card-result-details {
+    max-height: 200px; /* Adjust as needed */
+    opacity: 1;
+    margin-top: 0.5rem;
+}
+
+.card-result-item.expanded .expand-icon {
+    transform: rotate(180deg);
+}
+
+.expand-icon {
+    transition: transform 0.3s ease;
+    color: var(--primary-color);
+    font-size: 12px;
+    margin-left: 8px;
+}
+
+.best-card-item {
+    border: 2px solid var(--success-color);
+    border-left: 8px solid var(--success-color);
+}
+
+.other-cards-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.loading {
+    text-align: center;
+    padding: 2rem 0;
+    color: var(--text-light);
+}
+
+.error-message {
+    color: var(--error-color);
+    text-align: center;
+    padding: 1rem;
+    border: 1px solid var(--error-color);
+    border-radius: 4px;
+    margin: 1rem 0;
+}
+
+.card-issuer {
+    font-style: italic;
+    margin-top: 0.5rem;
 }
 
 .action-buttons {
