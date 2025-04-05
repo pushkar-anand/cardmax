@@ -38,24 +38,58 @@
       "entity_name": "mobile_recharges",
       "reward_rate": 2.0,
       "reward_type": "Cashback"
+    },
+    {
+      "type": "Merchant",
+      "entity_name": "swiggy",
+      "reward_rate": 2.0,
+      "reward_type": "Cashback"
+    },
+    {
+      "type": "Merchant",
+      "entity_name": "zomato",
+      "reward_rate": 2.0,
+      "reward_type": "Cashback"
+    },
+    {
+      "type": "Category",
+      "entity_name": "food_delivery",
+      "reward_rate": 2.0,
+      "reward_type": "Cashback"
+    },
+    {
+      "type": "Category",
+      "entity_name": "movie_tickets",
+      "reward_rate": 2.0,
+      "reward_type": "Cashback"
     }
   ],
   "benefits": [
-    "Welcome benefit of ₹500 Amazon Pay Gift Card",
-    "5% unlimited cashback on Amazon.in shopping",
+    "Welcome benefit of ₹500 Amazon Pay Gift Card on first transaction within 30 days",
+    "5% unlimited cashback on Amazon.in shopping (including Amazon Prime)",
     "2% cashback on utilities, mobile recharges, and other bill payments",
+    "2% cashback on food delivery services like Swiggy and Zomato",
+    "2% cashback on movie ticket bookings",
     "1% cashback on all other spends",
     "Fuel surcharge waiver of 1% (up to ₹250 per statement cycle)",
-    "No-cost EMI on Amazon.in",
+    "No-cost EMI on Amazon.in for purchases above ₹3,000",
     "Amazon Prime membership for first year (for select customers)",
     "24/7 concierge services",
-    "Contactless payment feature"
+    "Contactless payment feature",
+    "Exclusive offers on Amazon Great Indian Festival and Prime Day sales"
   ],
   "eligibility": {
     "min_age": 21,
     "max_age": 65,
     "min_income": 180000,
-    "credit_score": 700
+    "credit_score": 700,
+    "documents_required": [
+      "PAN Card",
+      "Aadhaar Card",
+      "Income proof (for salaried: latest 3 months salary slips)",
+      "Address proof (if different from Aadhaar)"
+    ],
+    "salaried_only": false
   },
   "fees": {
     "joining_fee": 500,
@@ -63,11 +97,24 @@
     "late_payment_fee": "₹100 to ₹750 (based on outstanding amount)",
     "cash_advance_fee": "2.5% of amount withdrawn (min ₹500)",
     "over_limit_fee": "2.5% of over-limit amount (min ₹500)",
-    "foreign_currency_markup": "3.5% of transaction amount"
+    "foreign_currency_markup": "3.5% of transaction amount",
+    "card_replacement_fee": 200,
+    "cheque_bounce_fee": 350,
+    "statement_request_fee": "₹100 per statement for statements older than 3 months"
   },
   "interest_rates": {
     "purchase_apr": 42.0,
     "cash_advance_apr": 42.0,
-    "minimum_due": "5% of total outstanding (min ₹100)"
+    "minimum_due": "5% of total outstanding (min ₹100)",
+    "interest_free_period": "Up to 50 days on retail purchases",
+    "balance_transfer_rate": "1.99% per month",
+    "emi_conversion_fee": "Processing fee of up to 1.5% may apply"
+  },
+  "reward_limits": {
+    "amazon_cashback_cap": "No upper limit",
+    "bill_payments_cap": "₹200 per statement cycle",
+    "other_cashback_cap": "₹500 per statement cycle",
+    "minimum_transaction": "No minimum transaction amount for cashback",
+    "cashback_credit": "Credited as Amazon Pay balance within 3 working days"
   }
 }
