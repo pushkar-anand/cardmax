@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show loading state
         recommendationResults.innerHTML = '<div class="loading">Calculating best cards...</div>';
         recommendationResults.classList.remove('hidden');
+        recommendationResults.style.display = 'block';
         
         // Get user's cards
         const userCards = Storage.getCards().map(card => card.id);
@@ -119,6 +120,35 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             console.log('Display recommendation from API called with:', data);
             
+            // Reset the recommendationResults first
+            recommendationResults.innerHTML = `
+                <h3>Card Recommendations</h3>
+                <div class="results-container">
+                    <div class="best-card">
+                        <h4>Best Card to Use</h4>
+                        <div id="best-card-result" class="card-result">
+                            <!-- Best card will be displayed here -->
+                        </div>
+                    </div>
+                    
+                    <div class="other-cards">
+                        <h4>Other Cards</h4>
+                        <div id="other-cards-results" class="cards-results">
+                            <!-- Other cards will be displayed here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="save-transaction-btn" class="btn btn-secondary">Save as Transaction</button>
+                </div>
+            `;
+            
+            // Re-query the DOM elements after rebuilding
+            const bestCardResult = document.getElementById('best-card-result');
+            const otherCardsResults = document.getElementById('other-cards-results');
+            const saveTransactionBtn = document.getElementById('save-transaction-btn');
+            
             if (!data || !data.best_card) {
                 console.log('No best card found in data');
                 bestCardResult.innerHTML = `
@@ -149,16 +179,31 @@ document.addEventListener('DOMContentLoaded', function() {
             
             console.log('Updated UI with recommendation results');
             
-            // Show results section
+            // Ensure results are visible and properly styled
             recommendationResults.classList.remove('hidden');
+            recommendationResults.style.display = 'block';
+            
+            // Force DOM update
+            setTimeout(() => {
+                console.log('Forcing DOM update');
+                recommendationResults.style.opacity = '0.99';
+                setTimeout(() => {
+                    recommendationResults.style.opacity = '1';
+                }, 50);
+            }, 50);
             
             // Enable save transaction button
             saveTransactionBtn.disabled = false;
+            
+            // Save updated references for transaction handling
+            // We need to update this because we re-created these elements
+            saveTransactionBtn.addEventListener('click', showSaveTransactionForm);
             
             // Add event listeners for accordion
             document.querySelectorAll('.card-result-header').forEach(header => {
                 if (!header.closest('.best-card')) {
                     header.addEventListener('click', function() {
+                        console.log('Card header clicked for expansion');
                         const card = this.closest('.card-result-item');
                         card.classList.toggle('expanded');
                     });
