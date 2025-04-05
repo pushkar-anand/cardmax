@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Cards - CardMax</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#2196F3">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>CardMax</h1>
+            <nav>
+                <ul>
+                    <li><a href="/">Dashboard</a></li>
+                    <li><a href="/cards" class="active">My Cards</a></li>
+                    <li><a href="/recommend">Get Recommendation</a></li>
+                    <li><a href="/transactions">Transactions</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="card-management">
+            <div class="section-header">
+                <h2>My Credit Cards</h2>
+                <button id="add-card-btn" class="btn btn-primary">Add New Card</button>
+            </div>
+            
+            <div id="cards-list" class="cards-list">
+                <p>No cards added yet. Add your first card to get started.</p>
+            </div>
+        </section>
+
+        <div id="card-form-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h2 id="form-title">Add New Card</h2>
+                <form id="card-form">
+                    <input type="hidden" id="card-id" name="id">
+                    <div class="form-group">
+                        <label for="card-name">Card Name</label>
+                        <input type="text" id="card-name" name="name" placeholder="e.g., HDFC Diners" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="card-issuer">Card Issuer</label>
+                        <input type="text" id="card-issuer" name="issuer" placeholder="e.g., HDFC, ICICI, Axis" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="card-last4">Last 4 Digits</label>
+                        <input type="text" id="card-last4" name="last4Digits" placeholder="e.g., 1234" pattern="[0-9]{4}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="card-expiry">Expiration Date</label>
+                        <input type="month" id="card-expiry" name="expiryDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="card-type">Card Type</label>
+                        <select id="card-type" name="cardType" required>
+                            <option value="">Select card type</option>
+                            <option value="Visa">Visa</option>
+                            <option value="Mastercard">Mastercard</option>
+                            <option value="AMEX">American Express</option>
+                            <option value="Discover">Discover</option>
+                            <option value="Diners">Diners Club</option>
+                            <option value="RuPay">RuPay</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="default-reward-rate">Default Reward Rate (%)</label>
+                        <input type="number" id="default-reward-rate" name="defaultRewardRate" placeholder="e.g., 1.0" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" id="cancel-form" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Card</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <section class="reward-rules hidden" id="reward-rules-section">
+            <div class="section-header">
+                <h2>Reward Rules for <span id="selected-card-name"></span></h2>
+                <button id="add-rule-btn" class="btn btn-primary">Add Reward Rule</button>
+            </div>
+            
+            <div id="rules-list" class="rules-list">
+                <p>No reward rules added for this card yet.</p>
+            </div>
+
+            <div id="rule-form-modal" class="modal hidden">
+                <div class="modal-content">
+                    <span class="close-rule-modal">&times;</span>
+                    <h2 id="rule-form-title">Add Reward Rule</h2>
+                    <form id="rule-form">
+                        <input type="hidden" id="rule-id" name="id">
+                        <input type="hidden" id="rule-card-id" name="cardId">
+                        <div class="form-group">
+                            <label for="rule-type">Rule Type</label>
+                            <select id="rule-type" name="type" required>
+                                <option value="Category">Category</option>
+                                <option value="Merchant">Merchant</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="entity-name">Name</label>
+                            <input type="text" id="entity-name" name="entityName" placeholder="Category or merchant name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="reward-rate">Reward Rate (%)</label>
+                            <input type="number" id="reward-rate" name="rewardRate" placeholder="e.g., 5.0" step="0.01" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="reward-type">Reward Type</label>
+                            <select id="reward-type" name="rewardType" required>
+                                <option value="Points">Points</option>
+                                <option value="Cashback">Cashback</option>
+                                <option value="Miles">Miles</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="point-value-group">
+                            <label for="point-value">Point Value (₹)</label>
+                            <input type="number" id="point-value" name="pointValue" placeholder="e.g., 0.25" step="0.01" min="0">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" id="cancel-rule-form" class="btn btn-secondary">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Rule</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 CardMax. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/cards.js"></script>
+</body>
+</html>

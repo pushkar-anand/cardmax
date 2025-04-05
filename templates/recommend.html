@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get Recommendation - CardMax</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#2196F3">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>CardMax</h1>
+            <nav>
+                <ul>
+                    <li><a href="/">Dashboard</a></li>
+                    <li><a href="/cards">My Cards</a></li>
+                    <li><a href="/recommend" class="active">Get Recommendation</a></li>
+                    <li><a href="/transactions">Transactions</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="recommendation-engine">
+            <h2>Find Your Best Card</h2>
+            <p>Enter your purchase details to get a recommendation on which card to use.</p>
+            
+            <form id="recommend-form">
+                <div class="form-group">
+                    <label for="merchant">Merchant</label>
+                    <input type="text" id="merchant" name="merchant" placeholder="e.g., Amazon, Starbucks">
+                </div>
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category" name="category" required>
+                        <option value="">Select a category</option>
+                        <option value="dining">Dining</option>
+                        <option value="groceries">Groceries</option>
+                        <option value="travel">Travel</option>
+                        <option value="entertainment">Entertainment</option>
+                        <option value="shopping">Shopping</option>
+                        <option value="utilities">Utilities</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="amount">Amount</label>
+                    <input type="number" id="amount" name="amount" placeholder="Enter amount" min="0" step="0.01" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Get Recommendation</button>
+            </form>
+
+            <div id="recommendation-results" class="hidden">
+                <h3>Card Recommendations</h3>
+                <div class="results-container">
+                    <div class="best-card">
+                        <h4>Best Card to Use</h4>
+                        <div id="best-card-result" class="card-result">
+                            <!-- Best card will be displayed here -->
+                        </div>
+                    </div>
+                    
+                    <div class="other-cards">
+                        <h4>Other Cards</h4>
+                        <div id="other-cards-results" class="cards-results">
+                            <!-- Other cards will be displayed here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="save-transaction-btn" class="btn btn-secondary">Save as Transaction</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="transaction-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-transaction-modal">&times;</span>
+            <h2>Save Transaction</h2>
+            <form id="save-transaction-form">
+                <div class="form-group">
+                    <label for="transaction-date">Date</label>
+                    <input type="date" id="transaction-date" name="date" required>
+                </div>
+                <div class="form-group">
+                    <label for="transaction-merchant">Merchant</label>
+                    <input type="text" id="transaction-merchant" name="merchantName" required>
+                </div>
+                <div class="form-group">
+                    <label for="transaction-category">Category</label>
+                    <select id="transaction-category" name="category" required>
+                        <option value="dining">Dining</option>
+                        <option value="groceries">Groceries</option>
+                        <option value="travel">Travel</option>
+                        <option value="entertainment">Entertainment</option>
+                        <option value="shopping">Shopping</option>
+                        <option value="utilities">Utilities</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="transaction-amount">Amount</label>
+                    <input type="number" id="transaction-amount" name="amount" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="transaction-card">Card Used</label>
+                    <select id="transaction-card" name="cardId" required>
+                        <!-- Cards will be populated here -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="transaction-reward">Reward Earned</label>
+                    <input type="number" id="transaction-reward" name="rewardEarned" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="transaction-notes">Notes</label>
+                    <textarea id="transaction-notes" name="notes" rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="cancel-transaction" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Transaction</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 CardMax. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/recommend.js"></script>
+</body>
+</html>
