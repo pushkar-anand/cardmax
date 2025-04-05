@@ -53,13 +53,23 @@ func GetRecommendationHandler(
 			return
 		}
 
-		// Get all available cards
-		allCards := cards.GetAll()
+		var cardsToUse []*cards.Card
+		
+		// If user specified cards, only use those
+		if len(body.UserCards) > 0 {
+			// In a real implementation, we would fetch the user's cards from the database
+			// and match them with predefined cards
+			// For now, we'll just use all available cards as placeholder
+			cardsToUse = cards.GetAll()
+		} else {
+			// Otherwise, use all available cards
+			cardsToUse = cards.GetAll()
+		}
 
 		// Calculate rewards for each card
 		var results []*RewardResult
 
-		for _, card := range allCards {
+		for _, card := range cardsToUse {
 			bestRule := findBestRule(body.Merchant, body.Category, card)
 
 			// Calculate reward rate

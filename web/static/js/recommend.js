@@ -57,6 +57,9 @@ document.addEventListener('DOMContentLoaded', function() {
         recommendationResults.innerHTML = '<div class="loading">Calculating best cards...</div>';
         recommendationResults.classList.remove('hidden');
         
+        // Get user's cards
+        const userCards = Storage.getCards().map(card => card.id);
+        
         // API request for recommendation
         fetch('/api/recommend', {
             method: 'POST',
@@ -66,7 +69,8 @@ document.addEventListener('DOMContentLoaded', function() {
             body: JSON.stringify({
                 merchant: merchant,
                 category: category,
-                amount: amount
+                amount: amount,
+                user_cards: userCards
             }),
         })
         .then(response => {
@@ -95,7 +99,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             `;
         });
-    }
     }
     
     function displayRecommendationFromAPI(data, amount) {
