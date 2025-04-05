@@ -1,109 +1,67 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"html/template"
-	"log"
-	"net/http"
-	"path/filepath"
-	"strconv"
-	"strings"
-	
-	"./models"
+	"context"
+	"embed"
+	"github.com/pushkar-anand/build-with-go/config"
+	"github.com/pushkar-anand/build-with-go/logger"
+	"github.com/pushkar-anand/cardmax/internal/cards"
+	"log/slog"
+	"os"
+	"os/signal"
+	"runtime/debug"
+	"syscall"
+
+	projectconfig "github.com/pushkar-anand/cardmax/config"
 )
 
-var templates *template.Template
-
-func init() {
-	templatesDir := "./templates"
-	templates = template.Must(template.ParseGlob(filepath.Join(templatesDir, "*.html")))
-}
-
-func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
-	err := templates.ExecuteTemplate(w, tmpl, data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
-	renderTemplate(w, "index.html", nil)
-}
-
-func cardsHandler(w http.ResponseWriter, r *http.Request) {
-	renderTemplate(w, "cards.html", nil)
-}
-
-func recommendHandler(w http.ResponseWriter, r *http.Request) {
-	renderTemplate(w, "recommend.html", nil)
-}
-
-func transactionsHandler(w http.ResponseWriter, r *http.Request) {
-	renderTemplate(w, "transactions.html", nil)
-}
+//go:embed data/
+var data embed.FS
 
 func main() {
-	// Serve static files
-	fs := http.FileServer(http.Dir("./static"))
-	http.Handle("/static/", http.StripPrefix("/static/", fs))
+	ctx, cancelFunc := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+	defer cancelFunc()
 
-	// Route handlers
-	http.HandleFunc("/", homeHandler)
-	http.HandleFunc("/cards", cardsHandler)
-	http.HandleFunc("/recommend", recommendHandler)
-	http.HandleFunc("/transactions", transactionsHandler)
-	
-	// API endpoints
-	http.HandleFunc("/api/predefined-cards", predefinedCardsHandler)
+	cfg, err := config.ReadFromEnv[projectconfig.Config](".env", "")
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to read env variables", logger.Error(err))
+		panic(err)
+	}
 
-	// Start server
-	port := ":8080"
-	fmt.Printf("Server starting on port %s\n", port)
-	log.Fatal(http.ListenAndServe(port, nil))
+	buildInfo, _ := debug.ReadBuildInfo()
+
+	log := getLogger(cfg.Environment)
+
+	log = log.With(
+		slog.String("version", buildInfo.Main.Version),
+		slog.String("go_version", buildInfo.GoVersion),
+		slog.String("environment", cfg.Environment.String()),
+	)
+
+	err = cards.Parse(data)
+	if err != nil {
+		log.ErrorContext(ctx, "Failed to parse cards", logger.Error(err))
+		panic(err)
+	}
+
+	err = Serve(ctx, cfg.Server, log)
+	if err != nil {
+		log.ErrorContext(ctx, "Failed to start server", logger.Error(err))
+		panic(err)
+	}
 }
 
-// API handler for predefined cards
-func predefinedCardsHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	
-	// Check if this is a request for a specific card
-	if r.URL.Path != "/api/predefined-cards" {
-		// Extract the card ID from the path
-		pathParts := strings.Split(r.URL.Path, "/")
-		if len(pathParts) == 4 {
-			idStr := pathParts[3]
-			id, err := strconv.Atoi(idStr)
-			if err != nil {
-				http.Error(w, "Invalid card ID", http.StatusBadRequest)
-				return
-			}
-			
-			// Get the specific card
-			card, err := models.GetPredefinedCardByID(id)
-			if err != nil {
-				http.Error(w, "Card not found", http.StatusNotFound)
-				return
-			}
-			
-			json.NewEncoder(w).Encode(card)
-			return
-		}
-		
-		http.NotFound(w, r)
-		return
+func getLogger(env projectconfig.Environment) *slog.Logger {
+	opts := []logger.Option{
+		logger.WithAddCaller(),
 	}
-	
-	// Return all cards
-	cards, err := models.LoadPredefinedCards()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+
+	switch env {
+	case projectconfig.Development:
+		opts = append(opts, logger.WithLevel(slog.LevelDebug), logger.WithFormat(logger.FormatText))
+	case projectconfig.Production:
+		opts = append(opts, logger.WithLevel(slog.LevelInfo), logger.WithFormat(logger.FormatJSON))
 	}
-	
-	json.NewEncoder(w).Encode(cards)
+
+	return logger.New(opts...)
 }

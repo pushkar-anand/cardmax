@@ -1,5 +1,5 @@
 {
-  "id": "ICICI-APAY",
+  "card_key": "ICICI-APAY",
   "name": "ICICI Amazon Pay Credit Card",
   "issuer": "ICICI",
   "card_type": "Visa",
