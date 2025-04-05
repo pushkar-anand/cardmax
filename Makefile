@@ -1,0 +1,3 @@
+
+dev:
+	go tool air
