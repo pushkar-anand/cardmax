@@ -266,20 +266,20 @@ const RecommendationEngine = {
             const rules = Storage.getCardRules(card.id);
             let bestRule = null;
             let bestRewardRate = card.defaultRewardRate;
-            let rewardType = 'Points';
-            let pointValue = 1;
+            let rewardType = card.rewardType || 'Points';
+            let pointValue = card.pointValue || 1;
             
             // Find the best matching rule
             for (const rule of rules) {
                 if (
-                    (rule.type === 'Merchant' && rule.entityName.toLowerCase() === merchant.toLowerCase()) ||
-                    (rule.type === 'Category' && rule.entityName.toLowerCase() === category.toLowerCase())
+                    (rule.type === 'Merchant' && rule.entityName.toLowerCase() === merchant) ||
+                    (rule.type === 'Category' && rule.entityName.toLowerCase() === category)
                 ) {
                     if (rule.rewardRate > bestRewardRate) {
                         bestRule = rule;
                         bestRewardRate = rule.rewardRate;
                         rewardType = rule.rewardType;
-                        pointValue = rule.pointValue || 1;
+                        pointValue = rule.pointValue || pointValue;
                     }
                 }
             }

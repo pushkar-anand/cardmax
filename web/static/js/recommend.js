@@ -39,8 +39,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function getRecommendation(e) {
         e.preventDefault();
         
-        const merchant = document.getElementById('merchant').value;
-        const category = document.getElementById('category').value;
+        const merchant = document.getElementById('merchant').value.toLowerCase();
+        const category = document.getElementById('category').value.toLowerCase();
         const amount = parseFloat(document.getElementById('amount').value);
         
         if (!category) {
