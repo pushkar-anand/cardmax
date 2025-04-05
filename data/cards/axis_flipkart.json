@@ -1,0 +1,47 @@
+{
+  "id": 5,
+  "name": "Axis Bank Flipkart Credit Card",
+  "issuer": "Axis",
+  "cardType": "Visa",
+  "defaultRewardRate": 1.5,
+  "rewardType": "Cashback",
+  "pointValue": 1.0,
+  "annualFee": 500,
+  "annualFeeWaiver": "On spending ₹2,00,000 in a year",
+  "rewardRules": [
+    {
+      "id": 1,
+      "type": "Merchant",
+      "entityName": "flipkart",
+      "rewardRate": 5.0,
+      "rewardType": "Cashback"
+    },
+    {
+      "id": 2,
+      "type": "Merchant",
+      "entityName": "myntra",
+      "rewardRate": 5.0,
+      "rewardType": "Cashback"
+    },
+    {
+      "id": 3,
+      "type": "Category",
+      "entityName": "travel",
+      "rewardRate": 4.0,
+      "rewardType": "Cashback"
+    },
+    {
+      "id": 4,
+      "type": "Category",
+      "entityName": "utilities",
+      "rewardRate": 2.0,
+      "rewardType": "Cashback"
+    }
+  ],
+  "benefits": [
+    "Flipkart Plus membership",
+    "Domestic airport lounge access - 4 visits per year",
+    "Fuel surcharge waiver up to ₹200 per month",
+    "Welcome vouchers worth ₹1,000 on Flipkart"
+  ]
+}

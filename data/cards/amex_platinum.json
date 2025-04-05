@@ -1,0 +1,42 @@
+{
+  "id": 2,
+  "name": "American Express Platinum",
+  "issuer": "AMEX",
+  "cardType": "AMEX",
+  "defaultRewardRate": 1.0,
+  "rewardType": "Membership Rewards",
+  "pointValue": 0.35,
+  "annualFee": 60000,
+  "annualFeeWaiver": "None",
+  "rewardRules": [
+    {
+      "id": 1,
+      "type": "Category",
+      "entityName": "travel",
+      "rewardRate": 5.0,
+      "rewardType": "Membership Rewards"
+    },
+    {
+      "id": 2,
+      "type": "Category",
+      "entityName": "dining",
+      "rewardRate": 5.0,
+      "rewardType": "Membership Rewards"
+    },
+    {
+      "id": 3,
+      "type": "Merchant",
+      "entityName": "taj hotels",
+      "rewardRate": 5.0,
+      "rewardType": "Membership Rewards"
+    }
+  ],
+  "benefits": [
+    "Airport lounge access - Priority Pass membership with unlimited visits",
+    "Hotel status - Marriott Bonvoy Gold, Hilton Honors Gold",
+    "Taj Epicure Plus membership",
+    "Global Dining Credit of ₹18,000 annually",
+    "Concierge services",
+    "Travel insurance up to ₹3 crores"
+  ]
+}

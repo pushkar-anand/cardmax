@@ -1,0 +1,48 @@
+{
+  "id": 1,
+  "name": "HDFC Diners Black",
+  "issuer": "HDFC",
+  "cardType": "Diners",
+  "defaultRewardRate": 1.5,
+  "rewardType": "Points",
+  "pointValue": 0.3,
+  "annualFee": 10000,
+  "annualFeeWaiver": "On spending ₹5,00,000 in a year",
+  "rewardRules": [
+    {
+      "id": 1,
+      "type": "Category",
+      "entityName": "dining",
+      "rewardRate": 10.0,
+      "rewardType": "Points"
+    },
+    {
+      "id": 2,
+      "type": "Category",
+      "entityName": "travel",
+      "rewardRate": 5.0,
+      "rewardType": "Points"
+    },
+    {
+      "id": 3,
+      "type": "Merchant",
+      "entityName": "amazon",
+      "rewardRate": 5.0,
+      "rewardType": "Points"
+    },
+    {
+      "id": 4,
+      "type": "Merchant",
+      "entityName": "flipkart",
+      "rewardRate": 5.0,
+      "rewardType": "Points"
+    }
+  ],
+  "benefits": [
+    "Airport lounge access - Unlimited international and domestic",
+    "Milestone benefits - ₹10,000 voucher on spending ₹5,00,000",
+    "Golf privileges - Unlimited green fee waiver",
+    "Concierge services",
+    "Insurance coverage up to ₹2 crores"
+  ]
+}

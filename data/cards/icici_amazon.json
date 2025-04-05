@@ -1,0 +1,40 @@
+{
+  "id": 3,
+  "name": "ICICI Amazon Pay Credit Card",
+  "issuer": "ICICI",
+  "cardType": "Visa",
+  "defaultRewardRate": 1.0,
+  "rewardType": "Cashback",
+  "pointValue": 1.0,
+  "annualFee": 500,
+  "annualFeeWaiver": "On spending ₹1,50,000 in a year",
+  "rewardRules": [
+    {
+      "id": 1,
+      "type": "Merchant",
+      "entityName": "amazon",
+      "rewardRate": 5.0,
+      "rewardType": "Cashback"
+    },
+    {
+      "id": 2,
+      "type": "Category",
+      "entityName": "utilities",
+      "rewardRate": 2.0,
+      "rewardType": "Cashback"
+    },
+    {
+      "id": 3,
+      "type": "Category",
+      "entityName": "groceries",
+      "rewardRate": 2.0,
+      "rewardType": "Cashback"
+    }
+  ],
+  "benefits": [
+    "No cost EMI on Amazon",
+    "Amazon Prime membership for first year",
+    "Fuel surcharge waiver up to ₹200 per month",
+    "Domestic airport lounge access - 4 visits per year"
+  ]
+}

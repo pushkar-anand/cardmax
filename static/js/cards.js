@@ -4,11 +4,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // DOM Elements
     const cardsList = document.getElementById('cards-list');
     const addCardBtn = document.getElementById('add-card-btn');
+    const addPredefinedCardBtn = document.getElementById('add-predefined-card-btn');
     const cardFormModal = document.getElementById('card-form-modal');
     const cardForm = document.getElementById('card-form');
     const cancelFormBtn = document.getElementById('cancel-form');
     const closeModalBtn = document.querySelector('.close-modal');
     const formTitle = document.getElementById('form-title');
+    
+    const predefinedCardsSection = document.getElementById('predefined-cards-section');
+    const predefinedCardsList = document.getElementById('predefined-cards-list');
+    const closePredefinedCardsBtn = document.getElementById('close-predefined-cards');
     
     const rewardRulesSection = document.getElementById('reward-rules-section');
     const selectedCardName = document.getElementById('selected-card-name');
@@ -30,9 +35,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Event Listeners
     addCardBtn.addEventListener('click', showAddCardForm);
+    addPredefinedCardBtn.addEventListener('click', showPredefinedCards);
     cancelFormBtn.addEventListener('click', hideCardForm);
     closeModalBtn.addEventListener('click', hideCardForm);
     cardForm.addEventListener('submit', saveCard);
+    closePredefinedCardsBtn.addEventListener('click', hidePredefinedCards);
     
     addRuleBtn.addEventListener('click', showAddRuleForm);
     cancelRuleFormBtn.addEventListener('click', hideRuleForm);
@@ -42,6 +49,119 @@ document.addEventListener('DOMContentLoaded', function() {
     rewardTypeSelect.addEventListener('change', togglePointValueVisibility);
     
     // Functions
+    
+    // Load predefined cards from the server
+    function loadPredefinedCards() {
+        fetch('/api/predefined-cards')
+            .then(response => response.json())
+            .then(cards => {
+                if (cards.length === 0) {
+                    predefinedCardsList.innerHTML = '<p>No predefined cards available.</p>';
+                    return;
+                }
+                
+                let html = '';
+                cards.forEach(card => {
+                    // Create reward rules HTML
+                    let rulesHtml = '';
+                    if (card.rewardRules && card.rewardRules.length > 0) {
+                        rulesHtml += '<div class="card-reward-rules">';
+                        rulesHtml += '<h4>Reward Rules:</h4>';
+                        rulesHtml += '<ul>';
+                        card.rewardRules.forEach(rule => {
+                            rulesHtml += `<li>${rule.type}: ${rule.entityName} - ${rule.rewardRate}% ${rule.rewardType}</li>`;
+                        });
+                        rulesHtml += '</ul>';
+                        rulesHtml += '</div>';
+                    }
+                    
+                    // Create benefits HTML
+                    let benefitsHtml = '';
+                    if (card.benefits && card.benefits.length > 0) {
+                        benefitsHtml += '<div class="card-benefits">';
+                        benefitsHtml += '<h4>Benefits:</h4>';
+                        benefitsHtml += '<ul>';
+                        card.benefits.forEach(benefit => {
+                            benefitsHtml += `<li>${benefit}</li>`;
+                        });
+                        benefitsHtml += '</ul>';
+                        benefitsHtml += '</div>';
+                    }
+                    
+                    html += `
+                        <div class="predefined-card-item" data-id="${card.id}">
+                            <div class="card-header">
+                                <div class="card-title">${card.name}</div>
+                                <button class="btn btn-primary add-this-card" data-id="${card.id}">Add This Card</button>
+                            </div>
+                            <div class="card-details">
+                                <div class="card-detail">Issuer: ${card.issuer}</div>
+                                <div class="card-detail">Type: ${card.cardType}</div>
+                                <div class="card-detail">Default Reward: ${card.defaultRewardRate}% ${card.rewardType}</div>
+                                <div class="card-detail">Point Value: ₹${card.pointValue}</div>
+                                <div class="card-detail">Annual Fee: ₹${card.annualFee}</div>
+                                <div class="card-detail">Fee Waiver: ${card.annualFeeWaiver}</div>
+                            </div>
+                            ${rulesHtml}
+                            ${benefitsHtml}
+                        </div>
+                    `;
+                });
+                
+                predefinedCardsList.innerHTML = html;
+                
+                // Add event listeners to "Add This Card" buttons
+                document.querySelectorAll('.add-this-card').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const cardId = parseInt(this.dataset.id);
+                        showAddPredefinedCardForm(cardId);
+                    });
+                });
+            })
+            .catch(error => {
+                console.error('Error loading predefined cards:', error);
+                predefinedCardsList.innerHTML = '<p>Error loading predefined cards. Please try again later.</p>';
+            });
+    }
+    
+    function showPredefinedCards() {
+        predefinedCardsSection.classList.remove('hidden');
+        loadPredefinedCards();
+    }
+    
+    function hidePredefinedCards() {
+        predefinedCardsSection.classList.add('hidden');
+    }
+    
+    function showAddPredefinedCardForm(cardId) {
+        fetch(`/api/predefined-cards/${cardId}`)
+            .then(response => response.json())
+            .then(card => {
+                formTitle.textContent = `Add ${card.name}`;
+                
+                const form = cardForm;
+                form.reset();
+                form.elements['id'].value = '';
+                form.elements['name'].value = card.name;
+                form.elements['issuer'].value = card.issuer;
+                form.elements['cardType'].value = card.cardType;
+                form.elements['defaultRewardRate'].value = card.defaultRewardRate;
+                
+                // Hide predefined cards section
+                hidePredefinedCards();
+                
+                // Show the form modal
+                Utils.toggleModal('card-form-modal', true);
+                
+                // Store the predefined card ID for later use
+                form.dataset.predefinedCardId = cardId;
+            })
+            .catch(error => {
+                console.error('Error loading predefined card details:', error);
+                Utils.showError('Error loading predefined card details. Please try again.');
+            });
+    }
+    
     function loadCards() {
         const cards = Storage.getCards();
         
@@ -168,7 +288,35 @@ document.addEventListener('DOMContentLoaded', function() {
         if (id) {
             Storage.updateCard(card);
         } else {
-            Storage.addCard(card);
+            const newCard = Storage.addCard(card);
+            
+            // If this was a predefined card, also add its reward rules
+            const predefinedCardId = form.dataset.predefinedCardId;
+            if (predefinedCardId) {
+                fetch(`/api/predefined-cards/${predefinedCardId}`)
+                    .then(response => response.json())
+                    .then(predefinedCard => {
+                        if (predefinedCard.rewardRules && predefinedCard.rewardRules.length > 0) {
+                            predefinedCard.rewardRules.forEach(rule => {
+                                const newRule = {
+                                    cardId: newCard.id,
+                                    type: rule.type,
+                                    entityName: rule.entityName,
+                                    rewardRate: rule.rewardRate,
+                                    rewardType: rule.rewardType,
+                                    pointValue: predefinedCard.pointValue
+                                };
+                                Storage.addRewardRule(newRule);
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading predefined card rules:', error);
+                    });
+                
+                // Clear the predefined card ID
+                delete form.dataset.predefinedCardId;
+            }
         }
         
         hideCardForm();
