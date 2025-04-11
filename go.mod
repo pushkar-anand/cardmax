@@ -4,7 +4,7 @@ go 1.24
 
 require (
 	github.com/gorilla/mux v1.8.1
-	github.com/pushkar-anand/build-with-go v0.0.10
+	github.com/pushkar-anand/build-with-go v0.0.11
 	golang.org/x/sync v0.13.0
 )
 
@@ -25,6 +25,7 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gohugoio/hugo v0.134.3 // indirect
+	github.com/gorilla/schema v1.4.1 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/knadh/koanf/maps v0.1.1 // indirect
 	github.com/knadh/koanf/parsers/dotenv v1.0.0 // indirect
