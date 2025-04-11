@@ -118,6 +118,8 @@ func GetRecommendationHTMLHandler(
 			tmplData["BestCard"] = best
 		}
 
+		log.DebugContext(ctx, "recommendation result", slog.Any("result", tmplData))
+
 		// Render the HTML template
 		err = tr.RenderPartial(w, web.PartialRecommendationResult, tmplData)
 		if err != nil {
