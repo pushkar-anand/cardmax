@@ -35,23 +35,15 @@ func addRoutes(
 		"/cards/{key}",
 		cards.GetByKeyHandler(logger, jsonWriter),
 	).Methods(http.MethodGet)
-	
+
 	apiRouter.HandleFunc(
 		"/recommend",
 		recommend.GetRecommendationHandler(logger, jsonWriter, reader),
 	).Methods(http.MethodPost)
-	
+
 	// HTML partials routes for htmx
 	apiRouter.HandleFunc(
 		"/recommend-html",
 		recommend.GetRecommendationHTMLHandler(logger, reader, tr),
 	).Methods(http.MethodPost)
-	
-	// Partials routes
-	partialsRouter := router.PathPrefix("/partials").Subrouter()
-	partialsRouter.HandleFunc(
-		"/save-transaction",
-		recommend.GetSaveTransactionFormHandler(logger, tr),
-	).Methods(http.MethodGet)
-
 }
