@@ -7,7 +7,7 @@
         <div id="best-card-result" class="card-result">
             <div class="card-result-item best-card-item" data-key="{{ .BestCard.Card.Key }}">
                 <div class="card-result-header">
-                    <div class="card-result-name">{{ .BestCard.Card.Name }} ({{ if .BestCard.Card.Last4Digits }}*{{ .BestCard.Card.Last4Digits }}{{ else }}{{ .BestCard.Card.Key }}{{ end }})</div>
+                    <div class="card-result-name">{{ .BestCard.Card.Name }} ({{ .BestCard.Card.Key }})</div>
                     <div class="card-result-reward">
                         {{ if eq .BestCard.RewardType "Cashback" }}
                             ₹{{ printf "%.2f" .BestCard.CashValue }} cashback ({{ .BestCard.RewardRate }}%)
@@ -37,7 +37,7 @@
                         {{ if ne $index 0 }}
                         <div class="card-result-item" data-key="{{ $card.Card.Key }}">
                             <div class="card-result-header">
-                                <div class="card-result-name">{{ $card.Card.Name }} ({{ if $card.Card.Last4Digits }}*{{ $card.Card.Last4Digits }}{{ else }}{{ $card.Card.Key }}{{ end }})</div>
+                                <div class="card-result-name">{{ $card.Card.Name }} ({{ $card.Card.Key }})</div>
                                 <div class="card-result-reward">
                                     {{ if eq $card.RewardType "Cashback" }}
                                         ₹{{ printf "%.2f" $card.CashValue }} cashback ({{ $card.RewardRate }}%)
