@@ -29,7 +29,7 @@
             <h2>Find Your Best Card</h2>
             <p>Enter your purchase details to get a recommendation on which card to use.</p>
             
-            <form id="recommend-form" hx-post="/api/recommend-html" hx-target="#recommendation-results">
+            <form id="recommend-form" hx-post="/api/recommend-html" hx-target="#recommendation-results" hx-indicator=".htmx-indicator">
                 <div class="form-group-container">
                     <div class="form-group-left">
                         <label for="merchant">Merchant</label>

@@ -27,7 +27,7 @@
     <main class="container">
         <section class="quick-recommend">
             <h2>Quick Recommendation</h2>
-            <form id="quick-recommend-form" hx-post="/api/recommend-html" hx-target="#recommendation-result">
+            <form id="quick-recommend-form" hx-post="/api/recommend-html" hx-target="#recommendation-result" hx-indicator=".htmx-indicator">
                 <div class="form-group-container">
                     <div class="form-group-left">
                         <label for="merchant">Merchant</label>

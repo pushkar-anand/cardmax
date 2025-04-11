@@ -32,7 +32,7 @@
                 <label for="transaction-card">Card Used</label>
                 <select id="transaction-card" name="cardId" required hx-get="/api/cards/get-reward?amount={{ .Amount }}&merchant={{ .Merchant }}&category={{ .Category }}" hx-target="#transaction-reward" hx-trigger="change">
                     {{ range .Cards }}
-                    <option value="{{ .ID }}">{{ .Name }} (*{{ .Last4Digits }})</option>
+                    <option value="{{ .Key }}">{{ .Name }} ({{ .Key }})</option>
                     {{ end }}
                 </select>
             </div>
