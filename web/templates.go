@@ -17,6 +17,7 @@ type (
 	}
 
 	Template string
+	Partial  string
 )
 
 const (
@@ -24,6 +25,10 @@ const (
 	TemplateCards        = "cards.html"
 	TemplateRecommend    = "recommend.html"
 	TemplateTransactions = "transactions.html"
+)
+
+const (
+	PartialRecommendationResult Partial = "recommendation_result"
 )
 
 func GetTemplates() (*Renderer, error) {
@@ -68,7 +73,7 @@ func (tr *Renderer) HTMLHandler(name Template) http.HandlerFunc {
 }
 
 // RenderPartial renders a partial template (from partials directory)
-func (tr *Renderer) RenderPartial(w http.ResponseWriter, name string, data map[string]interface{}) error {
+func (tr *Renderer) RenderPartial(w http.ResponseWriter, name Partial, data map[string]interface{}) error {
 	if data == nil {
 		data = make(map[string]interface{})
 	}
@@ -77,7 +82,7 @@ func (tr *Renderer) RenderPartial(w http.ResponseWriter, name string, data map[s
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	err := tr.templates.ExecuteTemplate(w, name, data)
+	err := tr.templates.ExecuteTemplate(w, string(name), data)
 	if err != nil {
 		return fmt.Errorf("web.RenderPartial: error executing template: %w", err)
 	}

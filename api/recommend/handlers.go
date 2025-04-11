@@ -1,15 +1,33 @@
 package recommend
 
 import (
-	"fmt"
 	"github.com/pushkar-anand/build-with-go/http/request"
 	"github.com/pushkar-anand/build-with-go/http/response"
 	"github.com/pushkar-anand/build-with-go/logger"
 	"github.com/pushkar-anand/cardmax/internal/cards"
+	"github.com/pushkar-anand/cardmax/web"
 	"log/slog"
 	"net/http"
 	"sort"
-	"strings"
+)
+
+type (
+	// RecommendationRequest is the request body for recommendation API
+	RecommendationRequest struct {
+		Merchant string  `json:"merchant" validate:"required_without=Category"`
+		Category string  `json:"category" validate:"required_without=Merchant"`
+		Amount   float64 `json:"amount" validate:"required,min=1"`
+	}
+
+	// RewardResult represents the calculated reward for a card
+	RewardResult struct {
+		Card        *cards.Card   `json:"card"`
+		RewardRate  float64       `json:"reward_rate"`
+		RewardType  string        `json:"reward_type"`
+		RewardValue float64       `json:"reward_value"`
+		CashValue   float64       `json:"cash_value"`
+		Rule        *cards.Reward `json:"rule,omitempty"`
+	}
 )
 
 // GetRecommendationHandler handles recommendation requests
@@ -19,22 +37,8 @@ func GetRecommendationHandler(
 	reader *request.Reader,
 ) http.HandlerFunc {
 	type (
-		// RecommendationRequest is the request body for recommendation API
-		RecommendationRequest struct {
-			Merchant  string  `json:"merchant"`
-			Category  string  `json:"category"`
-			Amount    float64 `json:"amount"`
-			UserCards []int   `json:"user_cards,omitempty"` // Optional: user card IDs to consider
-		}
-
-		// RewardResult represents the calculated reward for a card
-		RewardResult struct {
-			Card        *cards.Card   `json:"card"`
-			RewardRate  float64       `json:"reward_rate"`
-			RewardType  string        `json:"reward_type"`
-			RewardValue float64       `json:"reward_value"`
-			CashValue   float64       `json:"cash_value"`
-			Rule        *cards.Reward `json:"rule,omitempty"`
+		Request struct {
+			RecommendationRequest
 		}
 
 		Response struct {
@@ -43,7 +47,7 @@ func GetRecommendationHandler(
 		}
 	)
 
-	typedReader := request.NewTypedReader[RecommendationRequest](reader)
+	typedReader := request.NewTypedReader[Request](reader)
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -55,78 +59,121 @@ func GetRecommendationHandler(
 			return
 		}
 
-		// Validate that at least one of merchant or category is provided
-		if strings.TrimSpace(body.Merchant) == "" && strings.TrimSpace(body.Category) == "" {
-			log.ErrorContext(ctx, "both merchant and category are empty")
-			jw.WriteError(ctx, r, w, fmt.Errorf("please provide either merchant or category"))
-			return
-		}
-
 		var cardsToUse []*cards.Card
-		
-		// If user specified cards, only use those
-		if len(body.UserCards) > 0 {
-			// In a real implementation, we would fetch the user's cards from the database
-			// and match them with predefined cards
-			// For now, we'll just use all available cards as placeholder
-			cardsToUse = cards.GetAll()
-		} else {
-			// Otherwise, use all available cards
-			cardsToUse = cards.GetAll()
-		}
 
-		// Calculate rewards for each card
-		var results []*RewardResult
+		cardsToUse = cards.GetAll()
 
-		for _, card := range cardsToUse {
-			bestRule := findBestRule(body.Merchant, body.Category, card)
+		best, all := analyzeCards(cardsToUse, body.RecommendationRequest)
 
-			// Calculate reward rate
-			rewardRate := card.DefaultRewardRate
-			rewardType := card.RewardType
-
-			if bestRule != nil {
-				rewardRate = bestRule.RewardRate
-				rewardType = bestRule.RewardType
-			}
-
-			// Calculate reward value
-			rewardValue := (body.Amount * rewardRate) / 100
-
-			// Calculate cash value
-			cashValue := rewardValue
-			if rewardType == "Points" || rewardType == "Miles" {
-				cashValue = rewardValue * card.PointValue
-			}
-
-			result := &RewardResult{
-				Card:        card,
-				RewardRate:  rewardRate,
-				RewardType:  rewardType,
-				RewardValue: rewardValue,
-				CashValue:   cashValue,
-				Rule:        bestRule,
-			}
-
-			results = append(results, result)
-		}
-
-		// Sort by cash value (highest first)
-		sort.Slice(results, func(i, j int) bool {
-			return results[i].CashValue > results[j].CashValue
-		})
-
-		// Prepare response with best card and all cards
+		// Prepare a response with the best card and all cards
 		resp := Response{
-			AllCards: results,
-		}
-
-		if len(results) > 0 {
-			resp.BestCard = results[0]
+			BestCard: best,
+			AllCards: all,
 		}
 
 		jw.Ok(r.Context(), w, resp)
 	}
+}
+
+// GetRecommendationHTMLHandler handles recommendation requests and returns HTML
+func GetRecommendationHTMLHandler(
+	log *slog.Logger,
+	reader *request.Reader,
+	tr *web.Renderer,
+) http.HandlerFunc {
+	type (
+		Request struct {
+			RecommendationRequest
+		}
+	)
+
+	typedReader := request.NewTypedReader[Request](reader)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		data, err := typedReader.ReadAndValidateForm(r)
+		if err != nil {
+			log.ErrorContext(ctx, "failed to parse form", logger.Error(err))
+			http.Error(w, "Failed to parse form", http.StatusBadRequest)
+			return
+		}
+
+		// For now, use all available cards (later can be based on user selection)
+		cardsToUse := cards.GetAll()
+
+		best, all := analyzeCards(cardsToUse, data.RecommendationRequest)
+
+		// Prepare template data
+		tmplData := map[string]interface{}{
+			"AllCards": all,
+			"Amount":   data.Amount,
+			"Merchant": data.Merchant,
+			"Category": data.Category,
+			"BestCard": best,
+		}
+
+		// Add the best card if there are results
+		if best != nil {
+			tmplData["BestCard"] = best
+		}
+
+		// Render the HTML template
+		err = tr.RenderPartial(w, web.PartialRecommendationResult, tmplData)
+		if err != nil {
+			log.ErrorContext(ctx, "error rendering recommendation template", logger.Error(err))
+			http.Error(w, "Failed to render recommendation", http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func analyzeCards(cardsToUse []*cards.Card, rr RecommendationRequest) (best *RewardResult, all []*RewardResult) {
+	all = make([]*RewardResult, 0, len(cardsToUse))
+
+	for _, card := range cardsToUse {
+		bestRule := findBestRule(rr.Merchant, rr.Category, card)
+
+		// Calculate reward rate
+		rewardRate := card.DefaultRewardRate
+		rewardType := card.RewardType
+
+		if bestRule != nil {
+			rewardRate = bestRule.RewardRate
+			rewardType = bestRule.RewardType
+		}
+
+		// Calculate reward value
+		rewardValue := (rr.Amount * rewardRate) / 100
+
+		// Calculate cash value
+		cashValue := rewardValue
+		if rewardType == "Points" || rewardType == "Miles" {
+			cashValue = rewardValue * card.PointValue
+		}
+
+		result := &RewardResult{
+			Card:        card,
+			RewardRate:  rewardRate,
+			RewardType:  rewardType,
+			RewardValue: rewardValue,
+			CashValue:   cashValue,
+			Rule:        bestRule,
+		}
+
+		all = append(all, result)
+	}
+
+	// Sort by cash value (highest first)
+	sort.Slice(all, func(i, j int) bool {
+		return all[i].CashValue > all[j].CashValue
+	})
+
+	if len(all) == 0 {
+		return nil, all
+	}
+
+	return all[0], all
 }
 
 // findBestRule finds the best matching rule for a merchant and category
