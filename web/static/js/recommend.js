@@ -197,15 +197,35 @@ const RecommendationUI = {
             return;
         }
         
+        // Add interactive behavior for merchant/category fields
+        const merchantInput = form.querySelector('[name="merchant"]');
+        const categorySelect = form.querySelector('[name="category"]');
+        
+        if (merchantInput && categorySelect) {
+            // When merchant gets input, clear category if it has a value
+            merchantInput.addEventListener('input', function() {
+                if (this.value.trim() !== '' && categorySelect.value !== '') {
+                    categorySelect.value = '';
+                }
+            });
+            
+            // When category is selected, clear merchant if it has a value
+            categorySelect.addEventListener('change', function() {
+                if (this.value !== '' && merchantInput.value.trim() !== '') {
+                    merchantInput.value = '';
+                }
+            });
+        }
+        
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             
-            const merchant = form.querySelector('[name="merchant"]').value.toLowerCase();
-            const category = form.querySelector('[name="category"]').value.toLowerCase();
+            const merchant = form.querySelector('[name="merchant"]').value.toLowerCase().trim();
+            const category = form.querySelector('[name="category"]').value.toLowerCase().trim();
             const amount = parseFloat(form.querySelector('[name="amount"]').value);
             
-            if (!category) {
-                Utils.showError('Please select a category');
+            if (!merchant && !category) {
+                Utils.showError('Please enter either a merchant name or select a category');
                 return;
             }
             

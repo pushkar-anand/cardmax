@@ -1,6 +1,7 @@
 package recommend
 
 import (
+	"fmt"
 	"github.com/pushkar-anand/build-with-go/http/request"
 	"github.com/pushkar-anand/build-with-go/http/response"
 	"github.com/pushkar-anand/build-with-go/logger"
@@ -8,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	"sort"
+	"strings"
 )
 
 // GetRecommendationHandler handles recommendation requests
@@ -50,6 +52,13 @@ func GetRecommendationHandler(
 		if err != nil {
 			log.ErrorContext(ctx, "failed to parse request body", logger.Error(err))
 			jw.WriteError(ctx, r, w, err)
+			return
+		}
+
+		// Validate that at least one of merchant or category is provided
+		if strings.TrimSpace(body.Merchant) == "" && strings.TrimSpace(body.Category) == "" {
+			log.ErrorContext(ctx, "both merchant and category are empty")
+			jw.WriteError(ctx, r, w, fmt.Errorf("please provide either merchant or category"))
 			return
 		}
 
