@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-//go:embed templates/*.html
+//go:embed templates/*.html templates/partials/*.html
 var templatesFS embed.FS
 
 type (
@@ -27,7 +27,7 @@ const (
 )
 
 func GetTemplates() (*Renderer, error) {
-	templates, err := template.ParseFS(templatesFS, "templates/*.html")
+	templates, err := template.ParseFS(templatesFS, "templates/*.html", "templates/partials/*.html")
 	if err != nil {
 		return nil, fmt.Errorf("error parsing templates: %w", err)
 	}
@@ -65,4 +65,22 @@ func (tr *Renderer) HTMLDataHandler(name Template, data map[string]any) http.Han
 
 func (tr *Renderer) HTMLHandler(name Template) http.HandlerFunc {
 	return tr.HTMLDataHandler(name, nil)
+}
+
+// RenderPartial renders a partial template (from partials directory)
+func (tr *Renderer) RenderPartial(w http.ResponseWriter, name string, data map[string]interface{}) error {
+	if data == nil {
+		data = make(map[string]interface{})
+	}
+
+	data["Year"] = time.Now().Year()
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	err := tr.templates.ExecuteTemplate(w, name, data)
+	if err != nil {
+		return fmt.Errorf("web.RenderPartial: error executing template: %w", err)
+	}
+
+	return nil
 }

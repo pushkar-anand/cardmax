@@ -1,0 +1,54 @@
+{{ define "save_transaction" }}
+<div id="transaction-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-transaction-modal" hx-on:click="htmx.remove('#transaction-modal')">&times;</span>
+        <h2>Save Transaction</h2>
+        <form id="save-transaction-form" hx-post="/api/transactions" hx-on:submit="htmx.remove('#transaction-modal')">
+            <div class="form-group">
+                <label for="transaction-date">Date</label>
+                <input type="date" id="transaction-date" name="date" required value="{{ .Date }}">
+            </div>
+            <div class="form-group">
+                <label for="transaction-merchant">Merchant</label>
+                <input type="text" id="transaction-merchant" name="merchantName" required value="{{ .Merchant }}">
+            </div>
+            <div class="form-group">
+                <label for="transaction-category">Category</label>
+                <select id="transaction-category" name="category" required>
+                    <option value="dining" {{ if eq .Category "dining" }}selected{{ end }}>Dining</option>
+                    <option value="groceries" {{ if eq .Category "groceries" }}selected{{ end }}>Groceries</option>
+                    <option value="travel" {{ if eq .Category "travel" }}selected{{ end }}>Travel</option>
+                    <option value="entertainment" {{ if eq .Category "entertainment" }}selected{{ end }}>Entertainment</option>
+                    <option value="shopping" {{ if eq .Category "shopping" }}selected{{ end }}>Shopping</option>
+                    <option value="utilities" {{ if eq .Category "utilities" }}selected{{ end }}>Utilities</option>
+                    <option value="other" {{ if eq .Category "other" }}selected{{ end }}>Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="transaction-amount">Amount</label>
+                <input type="number" id="transaction-amount" name="amount" step="0.01" min="0" required value="{{ .Amount }}">
+            </div>
+            <div class="form-group">
+                <label for="transaction-card">Card Used</label>
+                <select id="transaction-card" name="cardId" required hx-get="/api/cards/get-reward?amount={{ .Amount }}&merchant={{ .Merchant }}&category={{ .Category }}" hx-target="#transaction-reward" hx-trigger="change">
+                    {{ range .Cards }}
+                    <option value="{{ .ID }}">{{ .Name }} (*{{ .Last4Digits }})</option>
+                    {{ end }}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="transaction-reward">Reward Earned</label>
+                <input type="number" id="transaction-reward" name="rewardEarned" step="0.01" min="0" required value="{{ .RewardEarned }}">
+            </div>
+            <div class="form-group">
+                <label for="transaction-notes">Notes</label>
+                <textarea id="transaction-notes" name="notes" rows="3"></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="button" id="cancel-transaction" class="btn btn-secondary" hx-on:click="htmx.remove('#transaction-modal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Transaction</button>
+            </div>
+        </form>
+    </div>
+</div>
+{{ end }}

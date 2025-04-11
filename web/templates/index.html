@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/static/css/styles.css">
     <link rel="manifest" href="/static/manifest.json">
     <meta name="theme-color" content="#2196F3">
+    <script src="/static/js/lib/htmx-2.0.4.min.js"></script>
 </head>
 <body>
     <header>
@@ -26,16 +27,18 @@
     <main class="container">
         <section class="quick-recommend">
             <h2>Quick Recommendation</h2>
-            <form id="quick-recommend-form">
+            <form id="quick-recommend-form" hx-post="/api/recommend-html" hx-target="#recommendation-result">
                 <div class="form-group-container">
                     <div class="form-group-left">
                         <label for="merchant">Merchant</label>
-                        <input type="text" id="merchant" name="merchant" placeholder="e.g., Amazon, Starbucks">
+                        <input type="text" id="merchant" name="merchant" placeholder="e.g., Amazon, Starbucks"
+                               hx-on:keyup="if(this.value.trim() !== '') document.getElementById('category').value = '';">
                     </div>
                     <div class="form-group-or">OR</div>
                     <div class="form-group-right">
                         <label for="category">Category</label>
-                        <select id="category" name="category">
+                        <select id="category" name="category"
+                                hx-on:change="if(this.value !== '') document.getElementById('merchant').value = '';">
                             <option value="">Select a category</option>
                             <option value="dining">Dining</option>
                             <option value="groceries">Groceries</option>
@@ -52,9 +55,13 @@
                     <input type="number" id="amount" name="amount" placeholder="Enter amount" min="0" step="0.01">
                 </div>
                 <button type="submit" class="btn btn-primary">Get Recommendation</button>
+                <div class="htmx-indicator loading">Calculating best cards...</div>
             </form>
-            <div id="recommendation-result" class="hidden">
-                <!-- Recommendation results will be displayed here -->
+            <div id="recommendation-result">
+                <!-- Recommendation results will be loaded here via htmx -->
+            </div>
+            <div id="transaction-modal-container">
+                <!-- Transaction modal will be loaded here via htmx -->
             </div>
         </section>
 
@@ -80,8 +87,7 @@
         </div>
     </footer>
 
+    <!-- HTMX replaces our custom JS -->
     <script src="/static/js/app.js"></script>
-    <script src="/static/js/recommend.js"></script>
-    <script src="/static/js/index.js"></script>
 </body>
 </html>

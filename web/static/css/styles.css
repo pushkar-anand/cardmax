@@ -428,6 +428,18 @@ input:focus, select:focus, textarea:focus {
     color: var(--text-light);
 }
 
+.htmx-indicator {
+    display: none;
+}
+
+.htmx-request .htmx-indicator {
+    display: block;
+}
+
+.htmx-request.htmx-indicator {
+    display: block;
+}
+
 .error-message {
     color: var(--error-color);
     text-align: center;

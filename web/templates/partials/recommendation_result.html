@@ -1,0 +1,90 @@
+{{ define "recommendation_result" }}
+<h3>Card Recommendations</h3>
+<div class="results-container">
+    {{ if .BestCard }}
+    <div class="best-card">
+        <h4>Best Card to Use</h4>
+        <div id="best-card-result" class="card-result">
+            <div class="card-result-item best-card-item" data-key="{{ .BestCard.Card.Key }}">
+                <div class="card-result-header">
+                    <div class="card-result-name">{{ .BestCard.Card.Name }} ({{ if .BestCard.Card.Last4Digits }}*{{ .BestCard.Card.Last4Digits }}{{ else }}{{ .BestCard.Card.Key }}{{ end }})</div>
+                    <div class="card-result-reward">
+                        {{ if eq .BestCard.RewardType "Cashback" }}
+                            ₹{{ printf "%.2f" .BestCard.CashValue }} cashback ({{ .BestCard.RewardRate }}%)
+                        {{ else }}
+                            {{ printf "%.0f" .BestCard.RewardValue }} {{ .BestCard.RewardType }} ({{ .BestCard.RewardRate }}%)
+                            worth ₹{{ printf "%.2f" .BestCard.CashValue }}
+                        {{ end }}
+                    </div>
+                </div>
+                <div class="card-result-details">
+                    <div>On ₹{{ printf "%.2f" .Amount }} purchase</div>
+                    {{ if .BestCard.Rule }}
+                    <div>Special rate for {{ .BestCard.Rule.Type }}: {{ .BestCard.Rule.EntityName }}</div>
+                    {{ end }}
+                    <div class="card-issuer">Issued by: {{ .BestCard.Card.Issuer }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="other-cards">
+        <h4>Other Cards</h4>
+        <div id="other-cards-results" class="cards-results">
+            {{ if gt (len .AllCards) 1 }}
+                <div class="other-cards-accordion">
+                    {{ range $index, $card := .AllCards }}
+                        {{ if ne $index 0 }}
+                        <div class="card-result-item" data-key="{{ $card.Card.Key }}">
+                            <div class="card-result-header">
+                                <div class="card-result-name">{{ $card.Card.Name }} ({{ if $card.Card.Last4Digits }}*{{ $card.Card.Last4Digits }}{{ else }}{{ $card.Card.Key }}{{ end }})</div>
+                                <div class="card-result-reward">
+                                    {{ if eq $card.RewardType "Cashback" }}
+                                        ₹{{ printf "%.2f" $card.CashValue }} cashback ({{ $card.RewardRate }}%)
+                                    {{ else }}
+                                        {{ printf "%.0f" $card.RewardValue }} {{ $card.RewardType }} ({{ $card.RewardRate }}%)
+                                        worth ₹{{ printf "%.2f" $card.CashValue }}
+                                    {{ end }}
+                                </div>
+                                <div class="expand-icon">▼</div>
+                            </div>
+                            <div class="card-result-details collapsed">
+                                <div>On ₹{{ printf "%.2f" $.Amount }} purchase</div>
+                                {{ if $card.Rule }}
+                                <div>Special rate for {{ $card.Rule.Type }}: {{ $card.Rule.EntityName }}</div>
+                                {{ end }}
+                                <div class="card-issuer">Issued by: {{ $card.Card.Issuer }}</div>
+                            </div>
+                        </div>
+                        {{ end }}
+                    {{ end }}
+                </div>
+            {{ else }}
+                <p>No other cards available.</p>
+            {{ end }}
+        </div>
+    </div>
+    {{ else }}
+    <div class="no-results">
+        <p>No cards found. <a href="/cards">Add your first card</a> to get recommendations.</p>
+    </div>
+    {{ end }}
+</div>
+
+{{ if .BestCard }}
+<div class="action-buttons">
+    <button id="save-transaction-btn" class="btn btn-secondary" hx-get="/partials/save-transaction?merchant={{ .Merchant }}&category={{ .Category }}&amount={{ .Amount }}" hx-target="#transaction-modal-container">Save as Transaction</button>
+</div>
+{{ end }}
+
+<script>
+document.querySelectorAll('.card-result-header').forEach(header => {
+    if (!header.closest('.best-card')) {
+        header.addEventListener('click', function() {
+            const card = this.closest('.card-result-item');
+            card.classList.toggle('expanded');
+        });
+    }
+});
+</script>
+{{ end }}
