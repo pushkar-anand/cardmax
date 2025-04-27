@@ -12,3 +12,5 @@ go.work.sum
 .idea/
 cardmax
 tmp/
+
+*.db

@@ -10,6 +10,7 @@ import (
 	"github.com/pushkar-anand/build-with-go/logger"
 	"github.com/pushkar-anand/build-with-go/validator"
 	"github.com/pushkar-anand/cardmax/internal/cards"
+	"github.com/pushkar-anand/cardmax/internal/db"
 	"github.com/pushkar-anand/cardmax/web"
 	"golang.org/x/sync/errgroup"
 	"log/slog"
@@ -53,6 +54,14 @@ func run(ctx context.Context) error {
 		slog.String("environment", cfg.Environment.String()),
 	)
 
+	dbConn, err := db.New(ctx, log, &db.Config{
+		Path: cfg.DB.Path,
+	})
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to connect to database", logger.Error(err))
+		return fmt.Errorf("failed to connect database: %w", err)
+	}
+
 	err = cards.Parse(data)
 	if err != nil {
 		log.ErrorContext(ctx, "Failed to parse cards", logger.Error(err))
@@ -74,7 +83,7 @@ func run(ctx context.Context) error {
 	jw := response.NewJSONWriter(log)
 	rd := request.NewReader(log, v)
 
-	srv := NewServer(cfg.Server, log, templates, jw, rd)
+	srv := NewServer(cfg.Server, log, templates, jw, rd, dbConn)
 
 	g, ctx := errgroup.WithContext(ctx)
 

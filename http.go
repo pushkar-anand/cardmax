@@ -8,6 +8,7 @@ import (
 	"github.com/pushkar-anand/build-with-go/http/response"
 	"github.com/pushkar-anand/build-with-go/http/server"
 	projectconfig "github.com/pushkar-anand/cardmax/config"
+	"github.com/pushkar-anand/cardmax/internal/db"
 	"github.com/pushkar-anand/cardmax/web"
 	"log/slog"
 )
@@ -18,6 +19,7 @@ func NewServer(
 	tr *web.Renderer,
 	jsonWriter *response.JSONWriter,
 	reader *request.Reader,
+	db *db.DB,
 ) *server.Server {
 	h := mux.NewRouter()
 
