@@ -62,9 +62,6 @@ func run(ctx context.Context) error {
 		slog.String("environment", cfg.Environment.String()),
 	)
 
-	// Log the final database path being used
-	log.InfoContext(ctx, "Using database path", slog.String("path", cfg.DB.Path))
-
 	dbConn, err := db.New(ctx, log, &db.Config{
 		Path: cfg.DB.Path,
 	})
