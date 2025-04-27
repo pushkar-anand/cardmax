@@ -44,6 +44,14 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("failed to read ENV vars: %w", err)
 	}
 
+	// Set default configuration values
+	err = cfg.SetDefaults()
+	if err != nil {
+		// Logger not fully initialized yet, use slog directly
+		slog.ErrorContext(ctx, "Failed to set default config values", logger.Error(err))
+		return fmt.Errorf("failed to set default config values: %w", err)
+	}
+
 	buildInfo, _ := debug.ReadBuildInfo()
 
 	log := getLogger(cfg.Environment)
@@ -53,6 +61,9 @@ func run(ctx context.Context) error {
 		slog.String("go_version", buildInfo.GoVersion),
 		slog.String("environment", cfg.Environment.String()),
 	)
+
+	// Log the final database path being used
+	log.InfoContext(ctx, "Using database path", slog.String("path", cfg.DB.Path))
 
 	dbConn, err := db.New(ctx, log, &db.Config{
 		Path: cfg.DB.Path,
