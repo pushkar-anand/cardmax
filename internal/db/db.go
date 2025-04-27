@@ -7,6 +7,7 @@ import (
 	"github.com/pushkar-anand/build-with-go/logger"
 	"log/slog"
 	"path"
+	"strings"
 	"sync"
 )
 
@@ -41,7 +42,11 @@ func New(
 	)
 
 	once.Do(func() {
-		dbPath := path.Join(cfg.Path, dbName)
+		dbPath := cfg.Path
+
+		if !strings.HasSuffix(dbPath, ".db") {
+			dbPath = path.Join(dbPath, dbName)
+		}
 
 		db, err = connect(ctx, log, dbPath)
 		if err != nil {
