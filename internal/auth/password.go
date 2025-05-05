@@ -14,7 +14,7 @@ import (
 const (
 	pepper      = "d9BfPN6mv9rvNJTj"
 	version     = argon2.Version // Argon2 version
-	time        = 4
+	algoTime    = 4
 	memory      = 64 * 1024
 	saltLength  = 16
 	parallelism = 2
@@ -55,7 +55,7 @@ func HashPassword(password string) (string, error) {
 	saltBuf = append(saltBuf, []byte(pepper)...)
 
 	// Generate the hash using Argon2id
-	hashBuf := argon2.IDKey([]byte(password), saltBuf, time, memory, parallelism, keyLength)
+	hashBuf := argon2.IDKey([]byte(password), saltBuf, algoTime, memory, parallelism, keyLength)
 
 	// Encode salt and hash to base64
 	salt := base64.StdEncoding.EncodeToString(saltBuf)
@@ -65,7 +65,7 @@ func HashPassword(password string) (string, error) {
 	defer eraseBuf([]byte(hash))
 
 	// Format the hash string
-	return fmt.Sprintf(hashFormat, version, memory, time, parallelism, keyLength, salt, hash), nil
+	return fmt.Sprintf(hashFormat, version, memory, algoTime, parallelism, keyLength, salt, hash), nil
 }
 
 // CheckPasswordHash compares a plaintext password with a stored hash
