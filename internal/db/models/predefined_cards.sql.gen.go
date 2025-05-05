@@ -30,7 +30,17 @@ INSERT INTO predefined_cards (
     ?, -- point_value
     ?, -- annual_fee
     ? -- annual_fee_waiver
-) RETURNING id, card_key, name, issuer, card_type, default_reward_rate, reward_type, point_value, annual_fee, annual_fee_waiver, created_at, updated_at
+)
+ON CONFLICT (card_key) DO UPDATE SET
+    name = excluded.name,
+    issuer = excluded.issuer,
+    card_type = excluded.card_type,
+    default_reward_rate = excluded.default_reward_rate,
+    reward_type = excluded.reward_type,
+    point_value = excluded.point_value,
+    annual_fee = excluded.annual_fee,
+    annual_fee_waiver = excluded.annual_fee_waiver
+RETURNING id, card_key, name, issuer, card_type, default_reward_rate, reward_type, point_value, annual_fee, annual_fee_waiver, created_at, updated_at
 `
 
 type CreatePredefinedCardParams struct {

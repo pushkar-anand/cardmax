@@ -2,8 +2,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
 	"github.com/pushkar-anand/build-with-go/logger"
 	"github.com/pushkar-anand/cardmax/internal/cards"
@@ -36,7 +34,7 @@ func (d *DB) PopulatePredefinedCards(ctx context.Context, log *slog.Logger, card
 	for _, card := range cardList {
 		var (
 			dbCard *models.PredefinedCard
-			err error
+			err    error
 		)
 
 		// Upsert the card (insert or update on conflict)
