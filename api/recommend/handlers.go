@@ -61,7 +61,7 @@ func GetRecommendationHandler(
 
 		var cardsToUse []*cards.Card
 
-		cardsToUse = cards.GetAll()
+		//cardsToUse = cards.GetAll()
 
 		best, all := analyzeCards(cardsToUse, body.RecommendationRequest)
 
@@ -99,8 +99,10 @@ func GetRecommendationHTMLHandler(
 			return
 		}
 
+		var cardsToUse []*cards.Card
+
 		// For now, use all available cards (later can be based on user selection)
-		cardsToUse := cards.GetAll()
+		//cardsToUse := cards.GetAll()
 
 		best, all := analyzeCards(cardsToUse, data.RecommendationRequest)
 

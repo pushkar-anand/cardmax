@@ -27,6 +27,30 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createCardStmt, err = db.PrepareContext(ctx, createCard); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateCard: %w", err)
 	}
+	if q.createPredefinedCardStmt, err = db.PrepareContext(ctx, createPredefinedCard); err != nil {
+		return nil, fmt.Errorf("error preparing query CreatePredefinedCard: %w", err)
+	}
+	if q.createPredefinedRewardRuleStmt, err = db.PrepareContext(ctx, createPredefinedRewardRule); err != nil {
+		return nil, fmt.Errorf("error preparing query CreatePredefinedRewardRule: %w", err)
+	}
+	if q.getAllCardsStmt, err = db.PrepareContext(ctx, getAllCards); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAllCards: %w", err)
+	}
+	if q.getAllPredefinedCardsStmt, err = db.PrepareContext(ctx, getAllPredefinedCards); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAllPredefinedCards: %w", err)
+	}
+	if q.getCardByNameAndIssuerStmt, err = db.PrepareContext(ctx, getCardByNameAndIssuer); err != nil {
+		return nil, fmt.Errorf("error preparing query GetCardByNameAndIssuer: %w", err)
+	}
+	if q.getPredefinedCardByKeyStmt, err = db.PrepareContext(ctx, getPredefinedCardByKey); err != nil {
+		return nil, fmt.Errorf("error preparing query GetPredefinedCardByKey: %w", err)
+	}
+	if q.getPredefinedRewardRulesByCardIDStmt, err = db.PrepareContext(ctx, getPredefinedRewardRulesByCardID); err != nil {
+		return nil, fmt.Errorf("error preparing query GetPredefinedRewardRulesByCardID: %w", err)
+	}
+	if q.updateCardStmt, err = db.PrepareContext(ctx, updateCard); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateCard: %w", err)
+	}
 	return &q, nil
 }
 
@@ -35,6 +59,46 @@ func (q *Queries) Close() error {
 	if q.createCardStmt != nil {
 		if cerr := q.createCardStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createCardStmt: %w", cerr)
+		}
+	}
+	if q.createPredefinedCardStmt != nil {
+		if cerr := q.createPredefinedCardStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createPredefinedCardStmt: %w", cerr)
+		}
+	}
+	if q.createPredefinedRewardRuleStmt != nil {
+		if cerr := q.createPredefinedRewardRuleStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createPredefinedRewardRuleStmt: %w", cerr)
+		}
+	}
+	if q.getAllCardsStmt != nil {
+		if cerr := q.getAllCardsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAllCardsStmt: %w", cerr)
+		}
+	}
+	if q.getAllPredefinedCardsStmt != nil {
+		if cerr := q.getAllPredefinedCardsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAllPredefinedCardsStmt: %w", cerr)
+		}
+	}
+	if q.getCardByNameAndIssuerStmt != nil {
+		if cerr := q.getCardByNameAndIssuerStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getCardByNameAndIssuerStmt: %w", cerr)
+		}
+	}
+	if q.getPredefinedCardByKeyStmt != nil {
+		if cerr := q.getPredefinedCardByKeyStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getPredefinedCardByKeyStmt: %w", cerr)
+		}
+	}
+	if q.getPredefinedRewardRulesByCardIDStmt != nil {
+		if cerr := q.getPredefinedRewardRulesByCardIDStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getPredefinedRewardRulesByCardIDStmt: %w", cerr)
+		}
+	}
+	if q.updateCardStmt != nil {
+		if cerr := q.updateCardStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateCardStmt: %w", cerr)
 		}
 	}
 	return err
@@ -74,15 +138,31 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db             DBTX
-	tx             *sql.Tx
-	createCardStmt *sql.Stmt
+	db                                   DBTX
+	tx                                   *sql.Tx
+	createCardStmt                       *sql.Stmt
+	createPredefinedCardStmt             *sql.Stmt
+	createPredefinedRewardRuleStmt       *sql.Stmt
+	getAllCardsStmt                      *sql.Stmt
+	getAllPredefinedCardsStmt            *sql.Stmt
+	getCardByNameAndIssuerStmt           *sql.Stmt
+	getPredefinedCardByKeyStmt           *sql.Stmt
+	getPredefinedRewardRulesByCardIDStmt *sql.Stmt
+	updateCardStmt                       *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:             tx,
-		tx:             tx,
-		createCardStmt: q.createCardStmt,
+		db:                                   tx,
+		tx:                                   tx,
+		createCardStmt:                       q.createCardStmt,
+		createPredefinedCardStmt:             q.createPredefinedCardStmt,
+		createPredefinedRewardRuleStmt:       q.createPredefinedRewardRuleStmt,
+		getAllCardsStmt:                      q.getAllCardsStmt,
+		getAllPredefinedCardsStmt:            q.getAllPredefinedCardsStmt,
+		getCardByNameAndIssuerStmt:           q.getCardByNameAndIssuerStmt,
+		getPredefinedCardByKeyStmt:           q.getPredefinedCardByKeyStmt,
+		getPredefinedRewardRulesByCardIDStmt: q.getPredefinedRewardRulesByCardIDStmt,
+		updateCardStmt:                       q.updateCardStmt,
 	}
 }

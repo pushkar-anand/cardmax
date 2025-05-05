@@ -70,10 +70,17 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("failed to connect database: %w", err)
 	}
 
-	err = cards.Parse(data)
+	parsedCards, err := cards.Parse(data)
 	if err != nil {
 		log.ErrorContext(ctx, "Failed to parse cards", logger.Error(err))
 		return fmt.Errorf("failed to parse cards data: %w", err)
+	}
+
+	// Populate predefined cards into the database
+	err = dbConn.PopulatePredefinedCards(ctx, log, parsedCards)
+	if err != nil {
+		log.ErrorContext(ctx, "Failed to populate predefined cards", logger.Error(err))
+		return fmt.Errorf("failed to populate predefined cards: %w", err)
 	}
 
 	templates, err := web.GetTemplates()

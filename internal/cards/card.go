@@ -29,57 +29,34 @@ type (
 		RewardRules       []Reward `json:"reward_rules"`
 		Benefits          []string `json:"benefits"`
 	}
-
-	parsedCards struct {
-		cards   []*Card
-		cardMap map[string]*Card
-	}
 )
 
-var parsed parsedCards
-
 // Parse parses all predefined card definitions from the data/cards directory
-func Parse(data embed.FS) error {
+func Parse(data embed.FS) ([]*Card, error) {
 	entries, err := data.ReadDir("data/cards")
 	if err != nil {
-		return fmt.Errorf("error reading cards dir: %w", err)
+		return nil, fmt.Errorf("error reading cards dir: %w", err)
 	}
 
 	cards := make([]*Card, 0, len(entries))
-	cardMap := make(map[string]*Card)
 
 	for _, entry := range entries {
 		fn := fmt.Sprintf("data/cards/%s", entry.Name())
 
 		file, err := data.ReadFile(fn)
 		if err != nil {
-			return fmt.Errorf("error reading card file %s: %w", fn, err)
+			return nil, fmt.Errorf("error reading card file %s: %w", fn, err)
 		}
 
 		var card Card
 
 		err = json.Unmarshal(file, &card)
 		if err != nil {
-			return fmt.Errorf("error unmarshalling card data %s: %w", fn, err)
+			return nil, fmt.Errorf("error unmarshalling card data %s: %w", fn, err)
 		}
 
 		cards = append(cards, &card)
-		cardMap[card.Key] = &card
 	}
 
-	parsed.cards = cards
-	parsed.cardMap = cardMap
-
-	return nil
-}
-
-// GetAll returns all predefined cards
-func GetAll() []*Card {
-	return parsed.cards
-}
-
-// GetByKey returns a card by its key
-func GetByKey(key string) (*Card, bool) {
-	card, ok := parsed.cardMap[key]
-	return card, ok
+	return cards, nil
 }

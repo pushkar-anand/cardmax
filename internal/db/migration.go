@@ -17,7 +17,7 @@ const (
 	migrationDir = "migrations"
 
 	// version is the current database migration version
-	version = 1
+	version = 2
 )
 
 // migrationFiles is populated when building the binary

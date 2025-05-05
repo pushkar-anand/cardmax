@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/pushkar-anand/build-with-go/logger"
+	"github.com/pushkar-anand/cardmax/internal/db/models"
 	"log/slog"
 	"path"
 	"strings"
@@ -19,7 +20,8 @@ type (
 	}
 
 	DB struct {
-		db *sql.DB
+		Conn    *sql.DB
+		Queries *models.Queries
 	}
 )
 
@@ -55,7 +57,13 @@ func New(
 			return
 		}
 
-		dbConn = &DB{db: db}
+		// Create the queries
+		queries := models.New(db)
+
+		dbConn = &DB{
+			Conn:    db,
+			Queries: queries,
+		}
 
 		err = migrateDB(ctx, log, dbPath)
 		if err != nil {

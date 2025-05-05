@@ -13,3 +13,23 @@ VALUES (?, -- Placeholder for Name
         ?, -- Placeholder for DefaultRewardRate
         ? -- Placeholder for CardType
        ) RETURNING *;
+
+-- name: GetCardByNameAndIssuer :one
+SELECT * FROM cards
+WHERE name = ? AND issuer = ?
+LIMIT 1;
+
+-- name: GetAllCards :many
+SELECT * FROM cards
+ORDER BY name ASC;
+
+-- name: UpdateCard :one
+UPDATE cards
+SET name = ?,
+    issuer = ?,
+    last4_digits = ?,
+    expiry_date = ?,
+    default_reward_rate = ?,
+    card_type = ?
+WHERE id = ?
+RETURNING *;

@@ -1,7 +1,6 @@
 package cards
 
 import (
-	"github.com/gorilla/mux"
 	"github.com/pushkar-anand/build-with-go/http/response"
 	"github.com/pushkar-anand/cardmax/internal/cards"
 	"log/slog"
@@ -18,7 +17,7 @@ func GetAllHandler(
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		jw.Ok(r.Context(), w, cards.GetAll())
+		//jw.Ok(r.Context(), w, cards.GetAll())
 	}
 }
 
@@ -32,15 +31,15 @@ func GetByKeyHandler(
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		key := vars["key"]
+		//vars := mux.Vars(r)
+		//key := vars["key"]
 
-		card, found := cards.GetByKey(key)
-		if !found {
-			jw.WriteProblem(r.Context(), r, w, response.NewProblem().WithStatus(http.StatusNotFound).WithDetail("card not found").Build())
-			return
-		}
+		//card, found := cards.GetByKey(key)
+		//if !found {
+		//	jw.WriteProblem(r.Context(), r, w, response.NewProblem().WithStatus(http.StatusNotFound).WithDetail("card not found").Build())
+		//	return
+		//}
 
-		jw.Ok(r.Context(), w, card)
+		//jw.Ok(r.Context(), w, card)
 	}
 }
