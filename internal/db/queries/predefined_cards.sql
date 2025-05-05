@@ -53,7 +53,11 @@ INSERT INTO predefined_reward_rules (
     ?, -- entity_name
     ?, -- reward_rate
     ? -- reward_type
-) RETURNING *;
+)
+ON CONFLICT (predefined_card_id, type, entity_name) DO UPDATE SET
+    reward_rate = excluded.reward_rate,
+    reward_type = excluded.reward_type
+RETURNING *;
 
 -- name: GetPredefinedRewardRulesByCardID :many
 SELECT * FROM predefined_reward_rules

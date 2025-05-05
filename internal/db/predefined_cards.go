@@ -34,7 +34,7 @@ func (d *DB) PopulatePredefinedCards(ctx context.Context, log *slog.Logger, card
 	for _, card := range cardList {
 		var (
 			dbCard *models.PredefinedCard
-			err    error
+			err error
 		)
 
 		// Upsert the card (insert or update on conflict)
@@ -64,13 +64,10 @@ func (d *DB) PopulatePredefinedCards(ctx context.Context, log *slog.Logger, card
 			slog.String("name", dbCard.Name),
 			slog.String("issuer", dbCard.Issuer))
 
-		// Add reward rules for this card
-		// TODO: Consider if reward rules also need upsert logic or deletion of old rules.
-		// For now, we'll add them. If the card exists, this might create duplicate rules
-		// if CreatePredefinedRewardRule doesn't handle conflicts.
+		// Add/Update reward rules for this card using the CreatePredefinedRewardRule query which handles UPSERT.
 		for _, rule := range card.RewardRules {
 			_, err := q.CreatePredefinedRewardRule(ctx, models.CreatePredefinedRewardRuleParams{
-				PredefinedCardID: dbCard.ID,
+				PredefinedCardID: dbCard.ID, // Use the ID from the upserted card
 				Type:             rule.Type,
 				EntityName:       rule.EntityName,
 				RewardRate:       rule.RewardRate,
