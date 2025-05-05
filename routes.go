@@ -22,6 +22,7 @@ func addRoutes(
 	reader *request.Reader,
 	dbConn *db.DB,
 	store *auth.SessionStore,
+	userRepo users.Repository,
 ) {
 	// Instantiate Middleware
 	authMw := middleware.AuthMiddleware(store, logger, jsonWriter)
@@ -40,10 +41,10 @@ func addRoutes(
 	apiRouter := router.PathPrefix("/api").Subrouter()
 
 	apiRouter.HandleFunc(
-		"/users", users.CreateUserHandler(logger, jsonWriter, reader, dbConn.Queries),
+		"/users", users.CreateUserHandler(logger, jsonWriter, reader, userRepo),
 	).Methods(http.MethodPost)
 	apiRouter.HandleFunc(
-		"/users/login", users.LoginHandler(logger, jsonWriter, reader, dbConn.Queries, store),
+		"/users/login", users.LoginHandler(logger, jsonWriter, reader, userRepo, store),
 	).Methods(http.MethodPost)
 
 	// Authenticated API routes

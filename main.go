@@ -10,6 +10,7 @@ import (
 	"github.com/pushkar-anand/build-with-go/http/response"
 	"github.com/pushkar-anand/build-with-go/logger"
 	"github.com/pushkar-anand/build-with-go/validator"
+	"github.com/pushkar-anand/cardmax/api/users"
 	"github.com/pushkar-anand/cardmax/internal/auth"
 	"github.com/pushkar-anand/cardmax/internal/cards"
 	"github.com/pushkar-anand/cardmax/internal/db"
@@ -103,10 +104,9 @@ func run(ctx context.Context) error {
 
 	sessionStore := auth.NewSessionStore(cfg.Session.Secret, &auth.SessionOptions{})
 
-	// Initialize server, passing the store. Assume NewServer handles passing it down.
-	srv := NewServer(cfg.Server, log, templates, jw, rd, dbConn, sessionStore) // Added store back
+	userRepo := users.NewRepository(dbConn, log)
 
-	// Routes are likely added within NewServer or its methods, so no explicit addRoutes call here.
+	srv := NewServer(cfg.Server, log, templates, jw, rd, dbConn, sessionStore, userRepo)
 
 	g, ctx := errgroup.WithContext(ctx)
 
