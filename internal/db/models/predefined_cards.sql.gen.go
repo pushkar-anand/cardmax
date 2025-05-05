@@ -98,7 +98,11 @@ INSERT INTO predefined_reward_rules (
     ?, -- entity_name
     ?, -- reward_rate
     ? -- reward_type
-) RETURNING id, predefined_card_id, type, entity_name, reward_rate, reward_type, created_at, updated_at
+)
+ON CONFLICT (predefined_card_id, type, entity_name) DO UPDATE SET
+    reward_rate = excluded.reward_rate,
+    reward_type = excluded.reward_type
+RETURNING id, predefined_card_id, type, entity_name, reward_rate, reward_type, created_at, updated_at
 `
 
 type CreatePredefinedRewardRuleParams struct {
