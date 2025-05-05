@@ -2,8 +2,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
 	"github.com/pushkar-anand/build-with-go/logger"
 	"github.com/pushkar-anand/cardmax/internal/cards"
@@ -39,45 +37,37 @@ func (d *DB) PopulatePredefinedCards(ctx context.Context, log *slog.Logger, card
 			err    error
 		)
 
-		// Check if the card already exists
-		dbCard, err = q.GetPredefinedCardByKey(ctx, card.Key)
-		if err != nil && errors.Is(err, sql.ErrNoRows) {
-
-			// Card doesn't exist, create it
-			var annualFeeWaiver *string
-			if card.AnnualFeeWaiver != "" {
-				annualFeeWaiver = &card.AnnualFeeWaiver
-			}
-
-			newCard, err := q.CreatePredefinedCard(ctx, models.CreatePredefinedCardParams{
-				CardKey:           card.Key,
-				Name:              card.Name,
-				Issuer:            card.Issuer,
-				CardType:          card.CardType,
-				DefaultRewardRate: card.DefaultRewardRate,
-				RewardType:        card.RewardType,
-				PointValue:        card.PointValue,
-				AnnualFee:         int64(card.AnnualFee),
-				AnnualFeeWaiver:   annualFeeWaiver,
-			})
-
-			dbCard = newCard
-
-			if err != nil {
-				return fmt.Errorf("failed to create predefined card %s: %w", card.Key, err)
-			}
-
-			log.InfoContext(ctx, "created predefined card in database",
-				slog.String("key", card.Key),
-				slog.String("name", card.Name),
-				slog.String("issuer", card.Issuer))
+		// Upsert the card (insert or update on conflict)
+		var annualFeeWaiver *string
+		if card.AnnualFeeWaiver != "" {
+			annualFeeWaiver = &card.AnnualFeeWaiver
 		}
 
-		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return fmt.Errorf("error checking if predefined card exists %s: %w", card.Key, err)
+		dbCard, err = q.CreatePredefinedCard(ctx, models.CreatePredefinedCardParams{
+			CardKey:           card.Key,
+			Name:              card.Name,
+			Issuer:            card.Issuer,
+			CardType:          card.CardType,
+			DefaultRewardRate: card.DefaultRewardRate,
+			RewardType:        card.RewardType,
+			PointValue:        card.PointValue,
+			AnnualFee:         int64(card.AnnualFee),
+			AnnualFeeWaiver:   annualFeeWaiver,
+		})
+
+		if err != nil {
+			return fmt.Errorf("failed to upsert predefined card %s: %w", card.Key, err)
 		}
+
+		log.InfoContext(ctx, "upserted predefined card in database",
+			slog.String("key", dbCard.CardKey), // Use dbCard.CardKey here as it's returned by the query
+			slog.String("name", dbCard.Name),
+			slog.String("issuer", dbCard.Issuer))
 
 		// Add reward rules for this card
+		// TODO: Consider if reward rules also need upsert logic or deletion of old rules.
+		// For now, we'll add them. If the card exists, this might create duplicate rules
+		// if CreatePredefinedRewardRule doesn't handle conflicts.
 		for _, rule := range card.RewardRules {
 			_, err := q.CreatePredefinedRewardRule(ctx, models.CreatePredefinedRewardRuleParams{
 				PredefinedCardID: dbCard.ID,
