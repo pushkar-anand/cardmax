@@ -11,7 +11,9 @@ tool (
 require (
 	github.com/golang-migrate/migrate/v4 v4.18.3
 	github.com/gorilla/mux v1.8.1
+	github.com/gorilla/sessions v1.3.0 // Add gorilla sessions
 	github.com/pushkar-anand/build-with-go v0.0.11
+	golang.org/x/crypto v0.36.0 // Explicitly add crypto for bcrypt
 	golang.org/x/sync v0.13.0
 )
 

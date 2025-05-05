@@ -19,6 +19,7 @@ import (
 	"runtime/debug"
 	"syscall"
 
+	"github.com/gorilla/sessions" // Import sessions
 	projectconfig "github.com/pushkar-anand/cardmax/config"
 )
 
@@ -98,7 +99,15 @@ func run(ctx context.Context) error {
 	jw := response.NewJSONWriter(log)
 	rd := request.NewReader(log, v)
 
-	srv := NewServer(cfg.Server, log, templates, jw, rd, dbConn)
+	// TODO: Replace hardcoded secret key with one loaded from config (e.g., cfg.SessionSecret)
+	// Ensure the key is strong (e.g., 32 or 64 bytes)
+	// store := sessions.NewCookieStore([]byte(cfg.SessionSecret))
+	store := sessions.NewCookieStore([]byte("a-very-secret-key-replace-in-prod!")) // Store initialized
+
+	// Initialize server, passing the store. Assume NewServer handles passing it down.
+	srv := NewServer(cfg.Server, log, templates, jw, rd, dbConn, store) // Added store back
+
+	// Routes are likely added within NewServer or its methods, so no explicit addRoutes call here.
 
 	g, ctx := errgroup.WithContext(ctx)
 

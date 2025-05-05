@@ -4,6 +4,7 @@ import (
 	"github.com/pushkar-anand/build-with-go/http/request"
 	"github.com/pushkar-anand/build-with-go/http/response"
 	"github.com/pushkar-anand/build-with-go/logger"
+	"github.com/pushkar-anand/cardmax/api/middleware" // Import middleware
 	"github.com/pushkar-anand/cardmax/internal/cards"
 	"github.com/pushkar-anand/cardmax/web"
 	"log/slog"
@@ -52,16 +53,28 @@ func GetRecommendationHandler(
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
+		// Get User ID from context
+		userID, ok := middleware.GetUserIDFromContext(ctx)
+		if !ok {
+			log.ErrorContext(ctx, "User ID not found in context after auth middleware")
+			jw.WriteProblem(ctx, r, w, response.NewProblem().WithStatus(http.StatusInternalServerError).WithDetail("Internal server error.").Build())
+			return
+		}
+		log.DebugContext(ctx, "Recommendation request received", slog.Int64("userID", userID))
+
 		body, err := typedReader.ReadAndValidateJSON(r)
 		if err != nil {
-			log.ErrorContext(ctx, "failed to parse request body", logger.Error(err))
+			log.ErrorContext(ctx, "failed to parse request body", logger.Error(err), slog.Int64("userID", userID))
 			jw.WriteError(ctx, r, w, err)
 			return
 		}
 
 		var cardsToUse []*cards.Card
 
-		//cardsToUse = cards.GetAll()
+		// TODO: Fetch cards specific to the user ID (`userID`) instead of using GetAll()
+		// cardsToUse = fetchUserCards(ctx, userID)
+		// For now, using the (commented out) old logic placeholder
+		// cardsToUse = cards.GetAll()
 
 		best, all := analyzeCards(cardsToUse, body.RecommendationRequest)
 
@@ -92,17 +105,28 @@ func GetRecommendationHTMLHandler(
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
+		// Get User ID from context
+		userID, ok := middleware.GetUserIDFromContext(ctx)
+		if !ok {
+			log.ErrorContext(ctx, "User ID not found in context after auth middleware")
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+		log.DebugContext(ctx, "Recommendation HTML request received", slog.Int64("userID", userID))
+
 		data, err := typedReader.ReadAndValidateForm(r)
 		if err != nil {
-			log.ErrorContext(ctx, "failed to parse form", logger.Error(err))
+			log.ErrorContext(ctx, "failed to parse form", logger.Error(err), slog.Int64("userID", userID))
 			http.Error(w, "Failed to parse form", http.StatusBadRequest)
 			return
 		}
 
 		var cardsToUse []*cards.Card
 
+		// TODO: Fetch cards specific to the user ID (`userID`) instead of using GetAll()
+		// cardsToUse = fetchUserCards(ctx, userID)
 		// For now, use all available cards (later can be based on user selection)
-		//cardsToUse := cards.GetAll()
+		// cardsToUse := cards.GetAll()
 
 		best, all := analyzeCards(cardsToUse, data.RecommendationRequest)
 
@@ -120,18 +144,19 @@ func GetRecommendationHTMLHandler(
 			tmplData["BestCard"] = best
 		}
 
-		log.DebugContext(ctx, "recommendation result", slog.Any("result", tmplData))
+		log.DebugContext(ctx, "recommendation result", slog.Any("result", tmplData), slog.Int64("userID", userID))
 
 		// Render the HTML template
 		err = tr.RenderPartial(w, web.PartialRecommendationResult, tmplData)
 		if err != nil {
-			log.ErrorContext(ctx, "error rendering recommendation template", logger.Error(err))
+			log.ErrorContext(ctx, "error rendering recommendation template", logger.Error(err), slog.Int64("userID", userID))
 			http.Error(w, "Failed to render recommendation", http.StatusInternalServerError)
 			return
 		}
 	}
 }
 
+// analyzeCards remains unchanged for now, but would need user cards in the future
 func analyzeCards(cardsToUse []*cards.Card, rr RecommendationRequest) (best *RewardResult, all []*RewardResult) {
 	all = make([]*RewardResult, 0, len(cardsToUse))
 
@@ -180,7 +205,7 @@ func analyzeCards(cardsToUse []*cards.Card, rr RecommendationRequest) (best *Rew
 	return all[0], all
 }
 
-// findBestRule finds the best matching rule for a merchant and category
+// findBestRule remains unchanged for now
 func findBestRule(merchant, category string, card *cards.Card) *cards.Reward {
 	var bestRule *cards.Reward
 	var bestRate float64 = card.DefaultRewardRate
