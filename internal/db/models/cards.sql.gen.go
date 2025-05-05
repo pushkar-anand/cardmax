@@ -10,20 +10,16 @@ import (
 )
 
 const createCard = `-- name: CreateCard :one
-INSERT INTO cards (name, -- The name given to the card
-                   issuer, -- The issuing institution
-                   last4_digits, -- The last four digits of the card number
-                   expiry_date, -- The expiration date (e.g., 'MM/YY' or 'YYYY-MM')
-                   default_reward_rate, -- The default reward rate (e.g., 1.5 for 1.5%)
-                   card_type -- The type of card (e.g., 'Visa', 'Mastercard')
+INSERT INTO cards (name,
+                   issuer,
+                   last4_digits,
+                   expiry_date,
+                   default_reward_rate,
+                   card_type,
+                   user_id -- Added user_id
 )
-VALUES (?, -- Placeholder for Name
-        ?, -- Placeholder for Issuer
-        ?, -- Placeholder for Last4Digits (ensure the provided value is 4 characters)
-        ?, -- Placeholder for ExpiryDate
-        ?, -- Placeholder for DefaultRewardRate
-        ? -- Placeholder for CardType
-       ) RETURNING id, name, issuer, last4_digits, expiry_date, default_reward_rate, card_type
+VALUES (?, ?, ?, ?, ?, ?, ?) -- Added placeholder for user_id
+RETURNING id, name, issuer, last4_digits, expiry_date, default_reward_rate, card_type, user_id, created_at, updated_at
 `
 
 type CreateCardParams struct {
@@ -33,6 +29,7 @@ type CreateCardParams struct {
 	ExpiryDate        string   `json:"expiry_date"`
 	DefaultRewardRate *float64 `json:"default_reward_rate"`
 	CardType          string   `json:"card_type"`
+	UserID            int64    `json:"user_id"`
 }
 
 func (q *Queries) CreateCard(ctx context.Context, arg CreateCardParams) (*Card, error) {
@@ -43,6 +40,7 @@ func (q *Queries) CreateCard(ctx context.Context, arg CreateCardParams) (*Card, 
 		arg.ExpiryDate,
 		arg.DefaultRewardRate,
 		arg.CardType,
+		arg.UserID,
 	)
 	var i Card
 	err := row.Scan(
@@ -53,17 +51,95 @@ func (q *Queries) CreateCard(ctx context.Context, arg CreateCardParams) (*Card, 
 		&i.ExpiryDate,
 		&i.DefaultRewardRate,
 		&i.CardType,
+		&i.UserID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return &i, err
 }
 
-const getAllCards = `-- name: GetAllCards :many
-SELECT id, name, issuer, last4_digits, expiry_date, default_reward_rate, card_type FROM cards
+const deleteCard = `-- name: DeleteCard :exec
+DELETE FROM cards
+WHERE id = ? AND user_id = ?
+`
+
+type DeleteCardParams struct {
+	ID     int64 `json:"id"`
+	UserID int64 `json:"user_id"`
+}
+
+// Add a DeleteCard query as well, ensuring user_id check
+func (q *Queries) DeleteCard(ctx context.Context, arg DeleteCardParams) error {
+	_, err := q.exec(ctx, q.deleteCardStmt, deleteCard, arg.ID, arg.UserID)
+	return err
+}
+
+const getCardByIDAndUser = `-- name: GetCardByIDAndUser :one
+SELECT id, name, issuer, last4_digits, expiry_date, default_reward_rate, card_type, user_id, created_at, updated_at FROM cards
+WHERE id = ? AND user_id = ?
+`
+
+type GetCardByIDAndUserParams struct {
+	ID     int64 `json:"id"`
+	UserID int64 `json:"user_id"`
+}
+
+func (q *Queries) GetCardByIDAndUser(ctx context.Context, arg GetCardByIDAndUserParams) (*Card, error) {
+	row := q.queryRow(ctx, q.getCardByIDAndUserStmt, getCardByIDAndUser, arg.ID, arg.UserID)
+	var i Card
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Issuer,
+		&i.Last4Digits,
+		&i.ExpiryDate,
+		&i.DefaultRewardRate,
+		&i.CardType,
+		&i.UserID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return &i, err
+}
+
+const getCardByNameIssuerAndUser = `-- name: GetCardByNameIssuerAndUser :one
+SELECT id, name, issuer, last4_digits, expiry_date, default_reward_rate, card_type, user_id, created_at, updated_at FROM cards
+WHERE name = ? AND issuer = ? AND user_id = ? -- Added user_id filter
+LIMIT 1
+`
+
+type GetCardByNameIssuerAndUserParams struct {
+	Name   string `json:"name"`
+	Issuer string `json:"issuer"`
+	UserID int64  `json:"user_id"`
+}
+
+func (q *Queries) GetCardByNameIssuerAndUser(ctx context.Context, arg GetCardByNameIssuerAndUserParams) (*Card, error) {
+	row := q.queryRow(ctx, q.getCardByNameIssuerAndUserStmt, getCardByNameIssuerAndUser, arg.Name, arg.Issuer, arg.UserID)
+	var i Card
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Issuer,
+		&i.Last4Digits,
+		&i.ExpiryDate,
+		&i.DefaultRewardRate,
+		&i.CardType,
+		&i.UserID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return &i, err
+}
+
+const listCardsByUser = `-- name: ListCardsByUser :many
+SELECT id, name, issuer, last4_digits, expiry_date, default_reward_rate, card_type, user_id, created_at, updated_at FROM cards
+WHERE user_id = ? -- Added user_id filter
 ORDER BY name ASC
 `
 
-func (q *Queries) GetAllCards(ctx context.Context) ([]*Card, error) {
-	rows, err := q.query(ctx, q.getAllCardsStmt, getAllCards)
+func (q *Queries) ListCardsByUser(ctx context.Context, userID int64) ([]*Card, error) {
+	rows, err := q.query(ctx, q.listCardsByUserStmt, listCardsByUser, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -79,6 +155,9 @@ func (q *Queries) GetAllCards(ctx context.Context) ([]*Card, error) {
 			&i.ExpiryDate,
 			&i.DefaultRewardRate,
 			&i.CardType,
+			&i.UserID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -93,32 +172,6 @@ func (q *Queries) GetAllCards(ctx context.Context) ([]*Card, error) {
 	return items, nil
 }
 
-const getCardByNameAndIssuer = `-- name: GetCardByNameAndIssuer :one
-SELECT id, name, issuer, last4_digits, expiry_date, default_reward_rate, card_type FROM cards
-WHERE name = ? AND issuer = ?
-LIMIT 1
-`
-
-type GetCardByNameAndIssuerParams struct {
-	Name   string `json:"name"`
-	Issuer string `json:"issuer"`
-}
-
-func (q *Queries) GetCardByNameAndIssuer(ctx context.Context, arg GetCardByNameAndIssuerParams) (*Card, error) {
-	row := q.queryRow(ctx, q.getCardByNameAndIssuerStmt, getCardByNameAndIssuer, arg.Name, arg.Issuer)
-	var i Card
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Issuer,
-		&i.Last4Digits,
-		&i.ExpiryDate,
-		&i.DefaultRewardRate,
-		&i.CardType,
-	)
-	return &i, err
-}
-
 const updateCard = `-- name: UpdateCard :one
 UPDATE cards
 SET name = ?,
@@ -127,8 +180,8 @@ SET name = ?,
     expiry_date = ?,
     default_reward_rate = ?,
     card_type = ?
-WHERE id = ?
-RETURNING id, name, issuer, last4_digits, expiry_date, default_reward_rate, card_type
+WHERE id = ? AND user_id = ? -- Added user_id filter
+RETURNING id, name, issuer, last4_digits, expiry_date, default_reward_rate, card_type, user_id, created_at, updated_at
 `
 
 type UpdateCardParams struct {
@@ -139,6 +192,7 @@ type UpdateCardParams struct {
 	DefaultRewardRate *float64 `json:"default_reward_rate"`
 	CardType          string   `json:"card_type"`
 	ID                int64    `json:"id"`
+	UserID            int64    `json:"user_id"`
 }
 
 func (q *Queries) UpdateCard(ctx context.Context, arg UpdateCardParams) (*Card, error) {
@@ -150,6 +204,7 @@ func (q *Queries) UpdateCard(ctx context.Context, arg UpdateCardParams) (*Card, 
 		arg.DefaultRewardRate,
 		arg.CardType,
 		arg.ID,
+		arg.UserID,
 	)
 	var i Card
 	err := row.Scan(
@@ -160,6 +215,9 @@ func (q *Queries) UpdateCard(ctx context.Context, arg UpdateCardParams) (*Card, 
 		&i.ExpiryDate,
 		&i.DefaultRewardRate,
 		&i.CardType,
+		&i.UserID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return &i, err
 }

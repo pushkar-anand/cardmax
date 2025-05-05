@@ -73,3 +73,5 @@ CREATE INDEX idx_predefined_cards_card_key ON predefined_cards (card_key);
 
 -- Create an index for faster lookups by issuer and card name
 CREATE INDEX idx_predefined_cards_issuer_name ON predefined_cards (issuer, name);
+
+CREATE UNIQUE INDEX idx_unique_reward_rule ON predefined_reward_rules (predefined_card_id, type, entity_name);

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/gob"
+	"errors"
 	"fmt"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
@@ -16,6 +17,8 @@ func init() {
 }
 
 const sessionName = "cardmaxx"
+
+var ErrNoSession = errors.New("no session")
 
 // SessionStore wraps the gorilla sessions.Store interface
 // to provide a more convenient API for working with sessions

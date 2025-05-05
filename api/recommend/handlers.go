@@ -4,8 +4,8 @@ import (
 	"github.com/pushkar-anand/build-with-go/http/request"
 	"github.com/pushkar-anand/build-with-go/http/response"
 	"github.com/pushkar-anand/build-with-go/logger"
-	"github.com/pushkar-anand/cardmax/api/middleware" // Import middleware
 	"github.com/pushkar-anand/cardmax/internal/cards"
+	appcontext "github.com/pushkar-anand/cardmax/internal/context"
 	"github.com/pushkar-anand/cardmax/web"
 	"log/slog"
 	"net/http"
@@ -52,19 +52,13 @@ func GetRecommendationHandler(
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+		userID := appcontext.MustGet[int64](ctx, appcontext.KeyUserID)
 
-		// Get User ID from context
-		userID, ok := middleware.GetUserIDFromContext(ctx)
-		if !ok {
-			log.ErrorContext(ctx, "User ID not found in context after auth middleware")
-			jw.WriteProblem(ctx, r, w, response.NewProblem().WithStatus(http.StatusInternalServerError).WithDetail("Internal server error.").Build())
-			return
-		}
-		log.DebugContext(ctx, "Recommendation request received", slog.Int64("userID", userID))
+		log.DebugContext(ctx, "Recommendation request received", slog.Int64("user_id", *userID))
 
 		body, err := typedReader.ReadAndValidateJSON(r)
 		if err != nil {
-			log.ErrorContext(ctx, "failed to parse request body", logger.Error(err), slog.Int64("userID", userID))
+			log.ErrorContext(ctx, "failed to parse request body", logger.Error(err), slog.Int64("user_id", *userID))
 			jw.WriteError(ctx, r, w, err)
 			return
 		}
@@ -104,19 +98,13 @@ func GetRecommendationHTMLHandler(
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+		userID := appcontext.MustGet[int64](ctx, appcontext.KeyUserID)
 
-		// Get User ID from context
-		userID, ok := middleware.GetUserIDFromContext(ctx)
-		if !ok {
-			log.ErrorContext(ctx, "User ID not found in context after auth middleware")
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-			return
-		}
-		log.DebugContext(ctx, "Recommendation HTML request received", slog.Int64("userID", userID))
+		log.DebugContext(ctx, "Recommendation HTML request received", slog.Int64("userID", *userID))
 
 		data, err := typedReader.ReadAndValidateForm(r)
 		if err != nil {
-			log.ErrorContext(ctx, "failed to parse form", logger.Error(err), slog.Int64("userID", userID))
+			log.ErrorContext(ctx, "failed to parse form", logger.Error(err), slog.Int64("userID", *userID))
 			http.Error(w, "Failed to parse form", http.StatusBadRequest)
 			return
 		}
@@ -144,19 +132,18 @@ func GetRecommendationHTMLHandler(
 			tmplData["BestCard"] = best
 		}
 
-		log.DebugContext(ctx, "recommendation result", slog.Any("result", tmplData), slog.Int64("userID", userID))
+		log.DebugContext(ctx, "recommendation result", slog.Any("result", tmplData), slog.Int64("userID", *userID))
 
 		// Render the HTML template
 		err = tr.RenderPartial(w, web.PartialRecommendationResult, tmplData)
 		if err != nil {
-			log.ErrorContext(ctx, "error rendering recommendation template", logger.Error(err), slog.Int64("userID", userID))
+			log.ErrorContext(ctx, "error rendering recommendation template", logger.Error(err), slog.Int64("userID", *userID))
 			http.Error(w, "Failed to render recommendation", http.StatusInternalServerError)
 			return
 		}
 	}
 }
 
-// analyzeCards remains unchanged for now, but would need user cards in the future
 func analyzeCards(cardsToUse []*cards.Card, rr RecommendationRequest) (best *RewardResult, all []*RewardResult) {
 	all = make([]*RewardResult, 0, len(cardsToUse))
 
@@ -205,7 +192,7 @@ func analyzeCards(cardsToUse []*cards.Card, rr RecommendationRequest) (best *Rew
 	return all[0], all
 }
 
-// findBestRule remains unchanged for now
+// findBestRule finds the best matching rule for a merchant and category
 func findBestRule(merchant, category string, card *cards.Card) *cards.Reward {
 	var bestRule *cards.Reward
 	var bestRate float64 = card.DefaultRewardRate

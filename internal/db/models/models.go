@@ -9,13 +9,16 @@ import (
 )
 
 type Card struct {
-	ID                int64    `json:"id"`
-	Name              string   `json:"name"`
-	Issuer            string   `json:"issuer"`
-	Last4Digits       string   `json:"last4_digits"`
-	ExpiryDate        string   `json:"expiry_date"`
-	DefaultRewardRate *float64 `json:"default_reward_rate"`
-	CardType          string   `json:"card_type"`
+	ID                int64     `json:"id"`
+	Name              string    `json:"name"`
+	Issuer            string    `json:"issuer"`
+	Last4Digits       string    `json:"last4_digits"`
+	ExpiryDate        string    `json:"expiry_date"`
+	DefaultRewardRate *float64  `json:"default_reward_rate"`
+	CardType          string    `json:"card_type"`
+	UserID            int64     `json:"user_id"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
 }
 
 type PredefinedCard struct {
@@ -45,8 +48,9 @@ type PredefinedRewardRule struct {
 }
 
 type User struct {
-	ID             int64     `json:"id"`
-	Username       string    `json:"username"`
-	HashedPassword string    `json:"hashed_password"`
-	CreatedAt      time.Time `json:"created_at"`
+	ID        int64     `json:"id"`
+	Username  string    `json:"username"`
+	Password  string    `json:"password"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }

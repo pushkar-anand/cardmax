@@ -14,3 +14,4 @@ cardmax
 tmp/
 
 *.db
+*.db*

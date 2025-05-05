@@ -3,23 +3,25 @@ package main
 import (
 	"context"
 	"embed"
+	"errors"
 	"fmt"
 	"github.com/pushkar-anand/build-with-go/config"
 	"github.com/pushkar-anand/build-with-go/http/request"
 	"github.com/pushkar-anand/build-with-go/http/response"
 	"github.com/pushkar-anand/build-with-go/logger"
 	"github.com/pushkar-anand/build-with-go/validator"
+	"github.com/pushkar-anand/cardmax/internal/auth"
 	"github.com/pushkar-anand/cardmax/internal/cards"
 	"github.com/pushkar-anand/cardmax/internal/db"
 	"github.com/pushkar-anand/cardmax/web"
 	"golang.org/x/sync/errgroup"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/signal"
 	"runtime/debug"
 	"syscall"
 
-	"github.com/gorilla/sessions" // Import sessions
 	projectconfig "github.com/pushkar-anand/cardmax/config"
 )
 
@@ -96,16 +98,13 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("failed to init validator: %w", err)
 	}
 
-	jw := response.NewJSONWriter(log)
+	jw := response.NewJSONWriter(log, response.WithErrorProblemMapper(errorMapper()))
 	rd := request.NewReader(log, v)
 
-	// TODO: Replace hardcoded secret key with one loaded from config (e.g., cfg.SessionSecret)
-	// Ensure the key is strong (e.g., 32 or 64 bytes)
-	// store := sessions.NewCookieStore([]byte(cfg.SessionSecret))
-	store := sessions.NewCookieStore([]byte("a-very-secret-key-replace-in-prod!")) // Store initialized
+	sessionStore := auth.NewSessionStore(cfg.Session.Secret, &auth.SessionOptions{})
 
 	// Initialize server, passing the store. Assume NewServer handles passing it down.
-	srv := NewServer(cfg.Server, log, templates, jw, rd, dbConn, store) // Added store back
+	srv := NewServer(cfg.Server, log, templates, jw, rd, dbConn, sessionStore) // Added store back
 
 	// Routes are likely added within NewServer or its methods, so no explicit addRoutes call here.
 
@@ -143,4 +142,17 @@ func getLogger(env projectconfig.Environment) *slog.Logger {
 	}
 
 	return logger.New(opts...)
+}
+
+func errorMapper() func(err error) response.Problem {
+	return func(err error) response.Problem {
+		switch {
+		case errors.Is(err, auth.ErrMismatchedHashAndPassword),
+			errors.Is(err, auth.ErrInvalidHashFormat):
+			errors.Is(err, auth.ErrNoSession)
+			return response.NewProblem().WithStatus(http.StatusUnauthorized).WithDetail("username or password is incorrect").Build()
+		default:
+			return response.NewProblem().WithStatus(http.StatusInternalServerError).WithDetail("Internal server error").Build()
+		}
+	}
 }

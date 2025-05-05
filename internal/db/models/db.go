@@ -33,20 +33,35 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createPredefinedRewardRuleStmt, err = db.PrepareContext(ctx, createPredefinedRewardRule); err != nil {
 		return nil, fmt.Errorf("error preparing query CreatePredefinedRewardRule: %w", err)
 	}
-	if q.getAllCardsStmt, err = db.PrepareContext(ctx, getAllCards); err != nil {
-		return nil, fmt.Errorf("error preparing query GetAllCards: %w", err)
+	if q.createUserStmt, err = db.PrepareContext(ctx, createUser); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateUser: %w", err)
+	}
+	if q.deleteCardStmt, err = db.PrepareContext(ctx, deleteCard); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteCard: %w", err)
 	}
 	if q.getAllPredefinedCardsStmt, err = db.PrepareContext(ctx, getAllPredefinedCards); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAllPredefinedCards: %w", err)
 	}
-	if q.getCardByNameAndIssuerStmt, err = db.PrepareContext(ctx, getCardByNameAndIssuer); err != nil {
-		return nil, fmt.Errorf("error preparing query GetCardByNameAndIssuer: %w", err)
+	if q.getCardByIDAndUserStmt, err = db.PrepareContext(ctx, getCardByIDAndUser); err != nil {
+		return nil, fmt.Errorf("error preparing query GetCardByIDAndUser: %w", err)
+	}
+	if q.getCardByNameIssuerAndUserStmt, err = db.PrepareContext(ctx, getCardByNameIssuerAndUser); err != nil {
+		return nil, fmt.Errorf("error preparing query GetCardByNameIssuerAndUser: %w", err)
 	}
 	if q.getPredefinedCardByKeyStmt, err = db.PrepareContext(ctx, getPredefinedCardByKey); err != nil {
 		return nil, fmt.Errorf("error preparing query GetPredefinedCardByKey: %w", err)
 	}
 	if q.getPredefinedRewardRulesByCardIDStmt, err = db.PrepareContext(ctx, getPredefinedRewardRulesByCardID); err != nil {
 		return nil, fmt.Errorf("error preparing query GetPredefinedRewardRulesByCardID: %w", err)
+	}
+	if q.getUserByIDStmt, err = db.PrepareContext(ctx, getUserByID); err != nil {
+		return nil, fmt.Errorf("error preparing query GetUserByID: %w", err)
+	}
+	if q.getUserByUsernameStmt, err = db.PrepareContext(ctx, getUserByUsername); err != nil {
+		return nil, fmt.Errorf("error preparing query GetUserByUsername: %w", err)
+	}
+	if q.listCardsByUserStmt, err = db.PrepareContext(ctx, listCardsByUser); err != nil {
+		return nil, fmt.Errorf("error preparing query ListCardsByUser: %w", err)
 	}
 	if q.updateCardStmt, err = db.PrepareContext(ctx, updateCard); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateCard: %w", err)
@@ -71,9 +86,14 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createPredefinedRewardRuleStmt: %w", cerr)
 		}
 	}
-	if q.getAllCardsStmt != nil {
-		if cerr := q.getAllCardsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getAllCardsStmt: %w", cerr)
+	if q.createUserStmt != nil {
+		if cerr := q.createUserStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createUserStmt: %w", cerr)
+		}
+	}
+	if q.deleteCardStmt != nil {
+		if cerr := q.deleteCardStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteCardStmt: %w", cerr)
 		}
 	}
 	if q.getAllPredefinedCardsStmt != nil {
@@ -81,9 +101,14 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getAllPredefinedCardsStmt: %w", cerr)
 		}
 	}
-	if q.getCardByNameAndIssuerStmt != nil {
-		if cerr := q.getCardByNameAndIssuerStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getCardByNameAndIssuerStmt: %w", cerr)
+	if q.getCardByIDAndUserStmt != nil {
+		if cerr := q.getCardByIDAndUserStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getCardByIDAndUserStmt: %w", cerr)
+		}
+	}
+	if q.getCardByNameIssuerAndUserStmt != nil {
+		if cerr := q.getCardByNameIssuerAndUserStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getCardByNameIssuerAndUserStmt: %w", cerr)
 		}
 	}
 	if q.getPredefinedCardByKeyStmt != nil {
@@ -94,6 +119,21 @@ func (q *Queries) Close() error {
 	if q.getPredefinedRewardRulesByCardIDStmt != nil {
 		if cerr := q.getPredefinedRewardRulesByCardIDStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getPredefinedRewardRulesByCardIDStmt: %w", cerr)
+		}
+	}
+	if q.getUserByIDStmt != nil {
+		if cerr := q.getUserByIDStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getUserByIDStmt: %w", cerr)
+		}
+	}
+	if q.getUserByUsernameStmt != nil {
+		if cerr := q.getUserByUsernameStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getUserByUsernameStmt: %w", cerr)
+		}
+	}
+	if q.listCardsByUserStmt != nil {
+		if cerr := q.listCardsByUserStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing listCardsByUserStmt: %w", cerr)
 		}
 	}
 	if q.updateCardStmt != nil {
@@ -143,11 +183,16 @@ type Queries struct {
 	createCardStmt                       *sql.Stmt
 	createPredefinedCardStmt             *sql.Stmt
 	createPredefinedRewardRuleStmt       *sql.Stmt
-	getAllCardsStmt                      *sql.Stmt
+	createUserStmt                       *sql.Stmt
+	deleteCardStmt                       *sql.Stmt
 	getAllPredefinedCardsStmt            *sql.Stmt
-	getCardByNameAndIssuerStmt           *sql.Stmt
+	getCardByIDAndUserStmt               *sql.Stmt
+	getCardByNameIssuerAndUserStmt       *sql.Stmt
 	getPredefinedCardByKeyStmt           *sql.Stmt
 	getPredefinedRewardRulesByCardIDStmt *sql.Stmt
+	getUserByIDStmt                      *sql.Stmt
+	getUserByUsernameStmt                *sql.Stmt
+	listCardsByUserStmt                  *sql.Stmt
 	updateCardStmt                       *sql.Stmt
 }
 
@@ -158,11 +203,16 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createCardStmt:                       q.createCardStmt,
 		createPredefinedCardStmt:             q.createPredefinedCardStmt,
 		createPredefinedRewardRuleStmt:       q.createPredefinedRewardRuleStmt,
-		getAllCardsStmt:                      q.getAllCardsStmt,
+		createUserStmt:                       q.createUserStmt,
+		deleteCardStmt:                       q.deleteCardStmt,
 		getAllPredefinedCardsStmt:            q.getAllPredefinedCardsStmt,
-		getCardByNameAndIssuerStmt:           q.getCardByNameAndIssuerStmt,
+		getCardByIDAndUserStmt:               q.getCardByIDAndUserStmt,
+		getCardByNameIssuerAndUserStmt:       q.getCardByNameIssuerAndUserStmt,
 		getPredefinedCardByKeyStmt:           q.getPredefinedCardByKeyStmt,
 		getPredefinedRewardRulesByCardIDStmt: q.getPredefinedRewardRulesByCardIDStmt,
+		getUserByIDStmt:                      q.getUserByIDStmt,
+		getUserByUsernameStmt:                q.getUserByUsernameStmt,
+		listCardsByUserStmt:                  q.listCardsByUserStmt,
 		updateCardStmt:                       q.updateCardStmt,
 	}
 }
