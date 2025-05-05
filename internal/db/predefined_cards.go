@@ -2,8 +2,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
 	"github.com/pushkar-anand/build-with-go/logger"
 	"github.com/pushkar-anand/cardmax/internal/cards"
