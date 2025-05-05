@@ -19,7 +19,17 @@ INSERT INTO predefined_cards (
     ?, -- point_value
     ?, -- annual_fee
     ? -- annual_fee_waiver
-) RETURNING *;
+)
+ON CONFLICT (card_key) DO UPDATE SET
+    name = excluded.name,
+    issuer = excluded.issuer,
+    card_type = excluded.card_type,
+    default_reward_rate = excluded.default_reward_rate,
+    reward_type = excluded.reward_type,
+    point_value = excluded.point_value,
+    annual_fee = excluded.annual_fee,
+    annual_fee_waiver = excluded.annual_fee_waiver
+RETURNING *;
 
 -- name: GetPredefinedCardByKey :one
 SELECT * FROM predefined_cards
@@ -43,7 +53,11 @@ INSERT INTO predefined_reward_rules (
     ?, -- entity_name
     ?, -- reward_rate
     ? -- reward_type
-) RETURNING *;
+)
+ON CONFLICT (predefined_card_id, type, entity_name) DO UPDATE SET
+    reward_rate = excluded.reward_rate,
+    reward_type = excluded.reward_type
+RETURNING *;
 
 -- name: GetPredefinedRewardRulesByCardID :many
 SELECT * FROM predefined_reward_rules
