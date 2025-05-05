@@ -1,26 +1,23 @@
 -- name: CreateCard :one
-INSERT INTO cards (name, -- The name given to the card
-                   issuer, -- The issuing institution
-                   last4_digits, -- The last four digits of the card number
-                   expiry_date, -- The expiration date (e.g., 'MM/YY' or 'YYYY-MM')
-                   default_reward_rate, -- The default reward rate (e.g., 1.5 for 1.5%)
-                   card_type -- The type of card (e.g., 'Visa', 'Mastercard')
+INSERT INTO cards (name,
+                   issuer,
+                   last4_digits,
+                   expiry_date,
+                   default_reward_rate,
+                   card_type,
+                   user_id -- Added user_id
 )
-VALUES (?, -- Placeholder for Name
-        ?, -- Placeholder for Issuer
-        ?, -- Placeholder for Last4Digits (ensure the provided value is 4 characters)
-        ?, -- Placeholder for ExpiryDate
-        ?, -- Placeholder for DefaultRewardRate
-        ? -- Placeholder for CardType
-       ) RETURNING *;
+VALUES (?, ?, ?, ?, ?, ?, ?) -- Added placeholder for user_id
+RETURNING *;
 
--- name: GetCardByNameAndIssuer :one
+-- name: GetCardByNameIssuerAndUser :one
 SELECT * FROM cards
-WHERE name = ? AND issuer = ?
+WHERE name = ? AND issuer = ? AND user_id = ? -- Added user_id filter
 LIMIT 1;
 
--- name: GetAllCards :many
+-- name: ListCardsByUser :many
 SELECT * FROM cards
+WHERE user_id = ? -- Added user_id filter
 ORDER BY name ASC;
 
 -- name: UpdateCard :one
@@ -31,5 +28,14 @@ SET name = ?,
     expiry_date = ?,
     default_reward_rate = ?,
     card_type = ?
-WHERE id = ?
+WHERE id = ? AND user_id = ? -- Added user_id filter
 RETURNING *;
+
+-- Add a DeleteCard query as well, ensuring user_id check
+-- name: DeleteCard :exec
+DELETE FROM cards
+WHERE id = ? AND user_id = ?;
+
+-- name: GetCardByIDAndUser :one
+SELECT * FROM cards
+WHERE id = ? AND user_id = ?;

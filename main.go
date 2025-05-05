@@ -3,17 +3,21 @@ package main
 import (
 	"context"
 	"embed"
+	"errors"
 	"fmt"
 	"github.com/pushkar-anand/build-with-go/config"
 	"github.com/pushkar-anand/build-with-go/http/request"
 	"github.com/pushkar-anand/build-with-go/http/response"
 	"github.com/pushkar-anand/build-with-go/logger"
 	"github.com/pushkar-anand/build-with-go/validator"
+	"github.com/pushkar-anand/cardmax/api/users"
+	"github.com/pushkar-anand/cardmax/internal/auth"
 	"github.com/pushkar-anand/cardmax/internal/cards"
 	"github.com/pushkar-anand/cardmax/internal/db"
 	"github.com/pushkar-anand/cardmax/web"
 	"golang.org/x/sync/errgroup"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/signal"
 	"runtime/debug"
@@ -95,10 +99,14 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("failed to init validator: %w", err)
 	}
 
-	jw := response.NewJSONWriter(log)
+	jw := response.NewJSONWriter(log, response.WithErrorProblemMapper(errorMapper()))
 	rd := request.NewReader(log, v)
 
-	srv := NewServer(cfg.Server, log, templates, jw, rd, dbConn)
+	sessionStore := auth.NewSessionStore(cfg.Session.Secret, &auth.SessionOptions{})
+
+	userRepo := users.NewRepository(dbConn, log)
+
+	srv := NewServer(cfg.Server, log, templates, jw, rd, dbConn, sessionStore, userRepo)
 
 	g, ctx := errgroup.WithContext(ctx)
 
@@ -134,4 +142,17 @@ func getLogger(env projectconfig.Environment) *slog.Logger {
 	}
 
 	return logger.New(opts...)
+}
+
+func errorMapper() func(err error) response.Problem {
+	return func(err error) response.Problem {
+		switch {
+		case errors.Is(err, auth.ErrMismatchedHashAndPassword),
+			errors.Is(err, auth.ErrInvalidHashFormat):
+			errors.Is(err, auth.ErrNoSession)
+			return response.NewProblem().WithStatus(http.StatusUnauthorized).WithDetail("username or password is incorrect").Build()
+		default:
+			return response.NewProblem().WithStatus(http.StatusInternalServerError).WithDetail("Internal server error").Build()
+		}
+	}
 }

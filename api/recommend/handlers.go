@@ -5,6 +5,7 @@ import (
 	"github.com/pushkar-anand/build-with-go/http/response"
 	"github.com/pushkar-anand/build-with-go/logger"
 	"github.com/pushkar-anand/cardmax/internal/cards"
+	appcontext "github.com/pushkar-anand/cardmax/internal/context"
 	"github.com/pushkar-anand/cardmax/web"
 	"log/slog"
 	"net/http"
@@ -51,17 +52,23 @@ func GetRecommendationHandler(
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+		userID := appcontext.MustGet[int64](ctx, appcontext.KeyUserID)
+
+		log.DebugContext(ctx, "Recommendation request received", slog.Int64("user_id", *userID))
 
 		body, err := typedReader.ReadAndValidateJSON(r)
 		if err != nil {
-			log.ErrorContext(ctx, "failed to parse request body", logger.Error(err))
+			log.ErrorContext(ctx, "failed to parse request body", logger.Error(err), slog.Int64("user_id", *userID))
 			jw.WriteError(ctx, r, w, err)
 			return
 		}
 
 		var cardsToUse []*cards.Card
 
-		//cardsToUse = cards.GetAll()
+		// TODO: Fetch cards specific to the user ID (`userID`) instead of using GetAll()
+		// cardsToUse = fetchUserCards(ctx, userID)
+		// For now, using the (commented out) old logic placeholder
+		// cardsToUse = cards.GetAll()
 
 		best, all := analyzeCards(cardsToUse, body.RecommendationRequest)
 
@@ -91,18 +98,23 @@ func GetRecommendationHTMLHandler(
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+		userID := appcontext.MustGet[int64](ctx, appcontext.KeyUserID)
+
+		log.DebugContext(ctx, "Recommendation HTML request received", slog.Int64("userID", *userID))
 
 		data, err := typedReader.ReadAndValidateForm(r)
 		if err != nil {
-			log.ErrorContext(ctx, "failed to parse form", logger.Error(err))
+			log.ErrorContext(ctx, "failed to parse form", logger.Error(err), slog.Int64("userID", *userID))
 			http.Error(w, "Failed to parse form", http.StatusBadRequest)
 			return
 		}
 
 		var cardsToUse []*cards.Card
 
+		// TODO: Fetch cards specific to the user ID (`userID`) instead of using GetAll()
+		// cardsToUse = fetchUserCards(ctx, userID)
 		// For now, use all available cards (later can be based on user selection)
-		//cardsToUse := cards.GetAll()
+		// cardsToUse := cards.GetAll()
 
 		best, all := analyzeCards(cardsToUse, data.RecommendationRequest)
 
@@ -120,12 +132,12 @@ func GetRecommendationHTMLHandler(
 			tmplData["BestCard"] = best
 		}
 
-		log.DebugContext(ctx, "recommendation result", slog.Any("result", tmplData))
+		log.DebugContext(ctx, "recommendation result", slog.Any("result", tmplData), slog.Int64("userID", *userID))
 
 		// Render the HTML template
 		err = tr.RenderPartial(w, web.PartialRecommendationResult, tmplData)
 		if err != nil {
-			log.ErrorContext(ctx, "error rendering recommendation template", logger.Error(err))
+			log.ErrorContext(ctx, "error rendering recommendation template", logger.Error(err), slog.Int64("userID", *userID))
 			http.Error(w, "Failed to render recommendation", http.StatusInternalServerError)
 			return
 		}
